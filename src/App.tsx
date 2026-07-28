@@ -4,9 +4,11 @@ import { TopBar } from "./shell/TopBar";
 import { Nav } from "./shell/Nav";
 import { Launcher } from "./shell/Launcher";
 import { Converter } from "./modules/converter/Converter";
+import { Guide } from "./modules/guide/Guide";
 import { Tuner } from "./modules/tuner/Tuner";
 import { Metronome } from "./modules/metronome/Metronome";
 import { Practice } from "./modules/practice/Practice";
+import { SongMaker } from "./modules/songmaker/SongMaker";
 import { WhistleMark } from "./shell/WhistleMark";
 
 export function App() {
@@ -32,9 +34,11 @@ export function App() {
       <main className="site-main">
         {route === "home" && <Launcher navigate={navigate} />}
         {route === "converter" && <Converter />}
+        {route === "guide" && <Guide />}
         {route === "tuner" && <Tuner />}
         {route === "metronome" && <Metronome />}
         {route === "practice" && <Practice />}
+        {route === "songmaker" && <SongMaker />}
       </main>
 
       <footer className="site-foot">

@@ -7,8 +7,8 @@ import { useCallback, useMemo, useState } from 'react';
 import type { SongJSON } from '../music/song';
 import type { AttemptResult } from './usePractice';
 import { DEFAULT_SONGS } from '../music/defaultSongs';
-import { WHISTLE_TUNES } from '../music/tunes';
-import { tuneToSong } from '../music/tuneToSong';
+import { REPERTOIRE } from '../music/repertoire';
+import { scoreToSong } from '../music/scoreToSong';
 import { DEFAULT_WHISTLE_KEY, WHISTLE_KEYS } from '../music/fingerings';
 import { DEFAULT_SCORE_VIEW, isScoreView, type ScoreView } from '../music/scoreView';
 
@@ -83,15 +83,15 @@ export interface LibrarySection {
 
 /**
  * Biblioteca: exercícios que acompanham o app, o repertório de whistle (que
- * nasce do ABC, já transposto para a afinação escolhida) e as músicas do
- * usuário. É por isso que a lista muda de altura quando você troca de whistle -
- * a mesma digitação, outra altura.
+ * nasce das partituras, já transposto para a afinação escolhida) e as músicas
+ * do usuário. É por isso que a lista muda de altura quando você troca de
+ * whistle - a mesma digitação, outra altura.
  */
 export function useLibrary(whistleKey: string) {
   const [userSongs, setUserSongs] = useState<SongJSON[]>(() => load(SONGS_KEY, []));
 
-  const tuneSongs = useMemo(
-    () => WHISTLE_TUNES.map((tune) => ({ tune, song: tuneToSong(tune, whistleKey) })),
+  const repertoireSongs = useMemo(
+    () => REPERTOIRE.map((score) => ({ score, song: scoreToSong(score, whistleKey) })),
     [whistleKey],
   );
 
@@ -128,14 +128,14 @@ export function useLibrary(whistleKey: string) {
     { key: 'basics', songs: DEFAULT_SONGS.filter((song) => !isOverridden(song.id)) },
     {
       key: 'irish',
-      songs: tuneSongs
-        .filter((entry) => entry.tune.collection === 'irish' && !isOverridden(entry.song.id))
+      songs: repertoireSongs
+        .filter((entry) => entry.score.collection === 'irish' && !isOverridden(entry.song.id))
         .map((entry) => entry.song),
     },
     {
       key: 'ballads',
-      songs: tuneSongs
-        .filter((entry) => entry.tune.collection === 'ballads' && !isOverridden(entry.song.id))
+      songs: repertoireSongs
+        .filter((entry) => entry.score.collection === 'ballads' && !isOverridden(entry.song.id))
         .map((entry) => entry.song),
     },
     { key: 'mine', songs: userSongs },

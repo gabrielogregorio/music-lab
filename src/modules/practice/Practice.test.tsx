@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Practice } from './Practice';
 import { I18nProvider } from '../../i18n/i18n';
-import { WHISTLE_TUNES } from './music/tunes';
+import { REPERTOIRE, findScore } from './music/repertoire';
 
 // O motor de áudio é um sistema externo: aqui interessa o fluxo da tela, não o
 // microfone. Sem o mock, o jsdom não tem getUserMedia nem AudioContext.
@@ -38,8 +38,8 @@ describe('Practice', () => {
 
   it('mostra todas as músicas do repertório na biblioteca', () => {
     renderPractice();
-    WHISTLE_TUNES.forEach((tune) => {
-      expect(screen.getByText(tune.title)).toBeInTheDocument();
+    REPERTOIRE.forEach((score) => {
+      expect(screen.getByText(score.title)).toBeInTheDocument();
     });
   });
 
@@ -109,10 +109,15 @@ describe('Practice', () => {
     expect(lowestY()).toBeLessThan(reading);
   });
 
-  it('mostra a procedência da melodia do repertório', async () => {
+  it('mostra a procedência da melodia do repertório, com link para a fonte do ritmo', async () => {
     const user = userEvent.setup();
+    const score = findScore('sally-gardens')!;
     renderPractice();
-    await user.click(screen.getByText("Down by the Sally Gardens"));
-    expect(screen.getByText(/Tablatura da apostila/)).toBeInTheDocument();
+    await user.click(screen.getByText(score.title));
+    expect(screen.getByText(/Tablatura de 6 furos/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: score.source.referenceName! })).toHaveAttribute(
+      'href',
+      score.source.referenceUrl,
+    );
   });
 });

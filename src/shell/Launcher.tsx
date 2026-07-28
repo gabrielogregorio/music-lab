@@ -3,7 +3,6 @@ import { APPS } from "../app/registry";
 import { detectTempo, looksLikeAbc, scoreMatch } from "../app/detect";
 import { setPendingAbc, setPendingTempo, type RouteName } from "../app/router";
 import { useTranslate } from "../i18n/i18n";
-import { WhistleMark } from "./WhistleMark";
 
 // The home screen is a single smart input, per the wiki-as-launcher idea: paste
 // or type, and it routes. Pasted ABC → converter; a tempo → metronome; anything
@@ -103,10 +102,6 @@ export function Launcher({ navigate }: { navigate: (r: RouteName) => void }) {
             </button>
           ))
         )}
-      </div>
-
-      <div className="launcher-emblem" aria-hidden="true">
-        <WhistleMark />
       </div>
     </section>
   );

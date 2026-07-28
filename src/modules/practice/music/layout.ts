@@ -4,6 +4,7 @@
  * é o que troca o "explodir horizontal" por quebra de linha. Tudo puro e
  * testável; a geometria vertical (alturas, hastes) fica no componente Staff.
  */
+import { measureBeats, splitByBeats } from './score';
 import type { PreparedNote } from './song';
 
 // Unidades lógicas do viewBox de um sistema.
@@ -44,9 +45,7 @@ export function measureNaturalWidth(m: Measure): number {
 /** Tempos por compasso a partir da fórmula (semínima = 1). 2/4 → 2, 6/8 → 3. */
 export function measureBeatsOf(timeSignature?: [number, number]): number {
   if (!timeSignature) return 4;
-  const [num, den] = timeSignature;
-  if (!num || !den) return 4;
-  return (num * 4) / den;
+  return measureBeats(timeSignature);
 }
 
 export interface PlacedNote {
@@ -94,22 +93,26 @@ export function placeSystem(system: System): PlacedSystem {
 
 /**
  * Divide as notas em compassos (fecha antes de estourar o compasso) e
- * empacota os compassos em sistemas que cabem em SYS_W.
+ * empacota os compassos em sistemas que cabem em SYS_W. A anacruse entra como
+ * primeiro compasso parcial - é a mesma regra que a partitura usa para se
+ * conferir (`splitByBeats`), então barra desenhada e barra contada coincidem.
  */
-export function buildSystems(notes: PreparedNote[], measureBeats: number): LayoutResult {
-  const measures: Measure[] = [];
-  let cur: Measure = { notes: [], beats: 0 };
-  const cap = measureBeats > 0 ? measureBeats : 4;
-  for (let i = 0; i < notes.length; i += 1) {
-    const n = notes[i];
-    if (cur.notes.length && cur.beats + n.beats > cap + 1e-6) {
-      measures.push(cur);
-      cur = { notes: [], beats: 0 };
-    }
-    cur.notes.push({ note: n, index: i });
-    cur.beats += n.beats;
-  }
-  if (cur.notes.length) measures.push(cur);
+export function buildSystems(
+  notes: PreparedNote[],
+  beatsPerMeasure: number,
+  pickupBeats = 0,
+): LayoutResult {
+  const laid: LNote[] = notes.map((note, index) => ({ note, index }));
+  const cap = beatsPerMeasure > 0 ? beatsPerMeasure : 4;
+  const measures: Measure[] = splitByBeats(
+    laid,
+    (laidNote) => laidNote.note.beats,
+    cap,
+    pickupBeats,
+  ).map((group) => ({
+    notes: group,
+    beats: group.reduce((total, laidNote) => total + laidNote.note.beats, 0),
+  }));
 
   const systems: System[] = [];
   let sys: Measure[] = [];

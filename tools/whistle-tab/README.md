@@ -1,5 +1,13 @@
 # Leitor de tablatura de tin whistle → `tunes.ts`
 
+> **APOSENTADO como fonte do repertório.** O Treino não lê mais ABC: o
+> repertório agora são partituras (`src/modules/practice/music/scores/`), com
+> ritmo vindo de fonte externa citada, geradas por
+> `tools/partituras-import/`. O `build_tunes.py` daqui escrevia um `tunes.ts`
+> que não existe mais - o ritmo dele era reconstruído por heurística
+> (`rhythms.py`), e é justamente isso que a troca corrigiu. O DECODIFICADOR DE
+> FUROS (`tabdecode.py`, `fingermap.py`) segue valendo como leitor de tab.
+
 Pipeline que transforma as **tablaturas de 6 furos** da apostila do curso no
 repertório do Treino (`src/modules/practice/music/tunes.ts`). Só depende de
 `pillow` e `numpy` (+ `pdftoppm`, do poppler).

@@ -1,5 +1,73 @@
 # Changelog
 
+## 2.4.0 - Repertório em partitura (o ABC saiu do Treino)
+
+O repertório do Treino deixou de ser ABC e virou **partitura**: um modelo em que
+cada coisa é um dado, e não um símbolo que um parser desfaz. E as melodias vindas
+da tablatura foram reimportadas de uma fonte que resolveu o que faltava: o ritmo.
+
+### Por que o ABC não dava conta
+
+O ABC parecia a língua franca certa, mas o repertório não vinha de ABC: vinha de
+**tablatura de furos**, que não grafa duração NENHUMA. As durações do `tunes.ts`
+eram reconstrução por heurística (`rhythms.py`: "dança corre em colcheia, air tem
+ritmo à mão"). O resultado passava no teste e soava errado:
+
+- **compasso errado** em 7 das 11 vindas da tab (Brian Boru e Johnny em 4/4, sendo 6/8;
+  I'll Tell Me Ma, Raggle Taggle, Rattlin' Bog e Danza del Oso em 4/4, sendo 2/4;
+  Dawning em 3/4, sendo 4/4);
+- **anacruse inexistente** - todas começavam no tempo forte, então a melodia
+  inteira caía deslocada em relação à barra;
+- **figura pontuada achatada** - o *snap* que é a assinatura de Scotland the
+  Brave e o balanço de Greensleeves sumiam.
+
+### O formato (`practice/music/score.ts`)
+
+Altura em `step` + `alter` + `octave` separados (a grafia sobrevive à
+transposição: Fá♯ vira Mi, nunca Fá♭), duração em tempos de semínima, pausa como
+`pitch: null` (evento de primeira classe - o ABC de trad irlandês escreve a
+melodia corrida e some com o respiro), e `timeSignature`, `pickupBeats` e `key`
+como campos. Mais a **procedência junto do dado** (`source`): destas melodias, a
+altura e o ritmo têm fontes diferentes, e o quanto uma explicou a outra
+(`rhythmMatch`) é a medida de confiança do resultado.
+
+Dá para converter daqui para qualquer notação; o contrário perde informação.
+
+### As 19 melodias, com ritmo de fonte citada
+
+Importadas por `tools/partituras-import/` das partituras canônicas do projeto
+"tabs in C tin whistle", onde a altura foi decodificada da tablatura por imagem e
+a duração foi transferida de uma versão de referência (thesession, Wikipédia)
+alinhada nota a nota. As 11 que estavam erradas foram refeitas; entraram 7 novas:
+**Britches Full of Stitches**, **Drunken Sailor**, **Molly Malone**, **Star of
+the County Down**, **The Skye Boat Song**, **Scotland the Brave** e **This Old
+Man**.
+
+**Inisheer não mudou de melodia** - só de formato. Ela já vinha do ABC do
+thesession (altura e ritmo da mesma fonte), então não havia o que corrigir; o ABC
+segue verbatim em `tools/partituras-import/abc_tunes.py` e é aberto em partitura
+no build. É o caminho para trazer qualquer tune de sessão.
+
+**This Old Man entra sem ritmo**, com toda nota em 1 tempo - e isso fica escrito
+na cara: `source.rhythm` e `warnings` dizem `SEM FONTE DE RITMO`, e a linha
+aparece na ficha da música. Não se acha referência livre para ela; o dia que
+achar, é só regerar. **The Godfather** ficou fora do repertório (tema protegido).
+
+Os ids antigos foram preservados - o histórico de tentativas é guardado por id, e
+renomear apagaria a prática de quem já treinou.
+
+### Anacruse no layout
+
+`pickupBeats` atravessa `scoreToSong` → `SongJSON` → `buildSystems`: o primeiro
+compasso agora é parcial. Partitura e layout usam a MESMA regra de quebra
+(`splitByBeats`, em `score.ts`), então o compasso contado e o compasso desenhado
+não podem divergir.
+
+Compasso que não fecha (herança da fonte, em Johnny I Hardly Knew Ya e Danza del
+Oso) fica **declarado** em `irregularMeasures`, e `repertoire.test.ts` exige que
+o declarado bata com o medido - regerar e ganhar um compasso torto novo quebra o
+teste em vez de passar batido.
+
 ## 2.3.0 - Treino com tablatura e repertório de whistle
 
 O Treino ganha o modo que faltava para quem aprende pelo instrumento, e uma

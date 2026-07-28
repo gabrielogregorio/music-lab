@@ -27,6 +27,7 @@ interface ScoreProps {
   octaveAgnostic: boolean;
   tempo?: number;
   timeSignature?: [number, number];
+  pickupBeats?: number;
 }
 
 export function Score({
@@ -40,11 +41,12 @@ export function Score({
   octaveAgnostic,
   tempo,
   timeSignature,
+  pickupBeats = 0,
 }: ScoreProps) {
   const measureBeats = measureBeatsOf(timeSignature);
   const { systems, sysOfNote, posOfNote } = useMemo(
-    () => buildSystems(notes, measureBeats),
-    [notes, measureBeats],
+    () => buildSystems(notes, measureBeats, pickupBeats),
+    [notes, measureBeats, pickupBeats],
   );
 
   const showStaff = view === 'staff' || view === 'both';

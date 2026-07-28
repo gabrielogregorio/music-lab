@@ -73,6 +73,15 @@ const ACCIDENTAL_SUFFIX: Record<number, string> = {
 };
 
 /**
+ * Sufixo ASCII de uma alteração em semitons, no formato que `parseNote` lê de
+ * volta ("#", "b", ""). `undefined` acima de dois semitons - grafia que nenhuma
+ * armadura real produz.
+ */
+export function accidentalSuffix(alter: number): string | undefined {
+  return ACCIDENTAL_SUFFIX[alter];
+}
+
+/**
  * Inverso de `parseNote`: monta o nome científico a partir da POSIÇÃO no
  * pentagrama (índice diatônico) e da ALTURA (MIDI). Guardar os dois separados é
  * o que preserva a grafia ao transpor - Fá♯ sobe para Mi♯, não para Fá.
@@ -83,7 +92,7 @@ export function noteNameAt(diatonic: number, midi: number): string | null {
   const octave = Math.floor(diatonic / STEPS_PER_OCTAVE);
   const letter = STEP_LETTER[((diatonic % STEPS_PER_OCTAVE) + STEPS_PER_OCTAVE) % STEPS_PER_OCTAVE];
   const naturalMidi = (octave + 1) * SEMITONES_PER_OCTAVE + LETTER_PC[letter];
-  const suffix = ACCIDENTAL_SUFFIX[midi - naturalMidi];
+  const suffix = accidentalSuffix(midi - naturalMidi);
   return suffix === undefined ? null : `${letter}${suffix}${octave}`;
 }
 

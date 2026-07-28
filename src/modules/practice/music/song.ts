@@ -24,6 +24,11 @@ export interface SongJSON {
   tempo: number;
   /** Fórmula de compasso [numerador, denominador]. */
   timeSignature?: [number, number];
+  /**
+   * Anacruse (levare) em tempos: o primeiro compasso é parcial. Sem isso as
+   * barras da peça inteira saem deslocadas pelo tamanho do levare.
+   */
+  pickupBeats?: number;
   /** Tolerância de afinação padrão, em cents. 0 = quase perfeito. */
   toleranceCents?: number;
   notes: SongNoteJSON[];

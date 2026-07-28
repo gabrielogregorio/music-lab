@@ -23,7 +23,7 @@ Conversor ABC → digitação · Afinador · Metrônomo · Treino de afinação 
 | `#/converter` | **🎼 Conversor ABC** | Cole um tune em [ABC](https://abcnotation.com/) e receba a partitura com a **digitação de tin whistle alinhada sob cada nota**. Transponha, **alongue as notas** para acalmar um tune agitado, remova ligados e exporte em SVG, PNG ou PDF. |
 | `#/tuner` | **🎯 Afinador** | Afina pelo **centro** da nota, não pelo instante. Mostra a fita de história em cents (vibrato vira onda, deriva de sopro vira rampa), **mede o vibrato** (centro, largura e taxa) e traz a oitava na tela. Presets por instrumento, lá calibrável de 415 a 466 Hz. |
 | `#/metronome` | **🕰️ Metrônomo** | Pêndulo dançante, tap tempo, subdivisões, swing e acento por batida. Timing *sample-accurate* via Web Audio. |
-| `#/practice` | **🎤 Treino** | Toque no microfone e avance nota a nota **só quando acertar a afinação** (detecção de pitch NSDF, tolerância em cents, pauta em SVG). |
+| `#/practice` | **🎤 Treino** | Toque no microfone e avance nota a nota **só quando acertar a afinação** (detecção de pitch NSDF, tolerância em cents, pauta em SVG). Repertório de 18 melodias em **partitura** - altura decodificada da tablatura de furos, ritmo vindo de fonte citada; escolher a whistle transpõe a peça inteira. |
 
 <div align="center">
 
@@ -98,7 +98,8 @@ src/
     tuner/                Afinador: core/ (YIN, cents, estabilização, vibrato)      [testado]
                           + audio/ (worklet coletor → worker YIN) + UI em canvas
     metronome/            Metronome.tsx (UI + rAF) + core/ (timing/áudio puro)         [testado]
-    practice/             Treino: audio/ (pitch NSDF), music/, hooks/, components/      [testado]
+    practice/             Treino: audio/ (pitch NSDF), music/ (partitura + repertório),
+                          hooks/, components/                                       [testado]
   music/                  leitura de ABC, alturas, armadura + transform.ts (durações,
                           ligados)                                                     [testado]
   whistle/                tabela de digitação, mapeamento e render SVG da tablatura     [testado]

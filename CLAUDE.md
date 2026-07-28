@@ -27,7 +27,7 @@ afinador próprio.
 | `#/converter` | **Conversor ABC** | ABC → partitura (abcjs) com a digitação de tin whistle alinhada sob cada nota; transpose, alongar notas, remover ligados; export SVG/PNG/PDF. |
 | `#/tuner` | **Afinador** | YIN em AudioWorklet+Worker; fita de história em cents, vibrato medido (centro/extensão/taxa), presets por instrumento, calibração do lá. Julga pelo **centro**, não pelo instante. |
 | `#/metronome` | **Metrônomo** | Pêndulo SVG, tap tempo, subdivisões, swing, acento por batida; timing sample-accurate via Web Audio. |
-| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents). Lê por **partitura**, por **tablatura de 6 furos** ou pelas duas; escolher a whistle transpõe o repertório (que mora em ABC). |
+| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents). Lê por **partitura**, por **tablatura de 6 furos** ou pelas duas; escolher a whistle transpõe o repertório (que mora em partitura JSON). |
 
 ## Stack
 
@@ -86,10 +86,11 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/modules/tuner/` | Afinador. `core/` puro e testado (yin, cents, stability, vibrato, trace, presets); `audio/` (worklet coletor + worker YIN + engine); `hooks/`, `components/`. |
 | `src/modules/metronome/` | `Metronome.tsx` (UI + loop rAF) + `core/` (timing/áudio puro, testado). |
 | `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `hooks/`, `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
-| `src/modules/practice/music/` | Núcleo puro: `tunes.ts` (repertório em ABC, **gerado** por `tools/whistle-tab/`) → `tuneToSong.ts` → `song.ts`; `fingerings.ts` (tabela de furos + tessitura real), `whistleTuning.ts` (transposição por afinação), `octave.ts` (oitava de leitura), `layout.ts` (compassos, sistemas e `placeSystem`), `scoreView.ts`, `notes.ts`, `tempo.ts`. |
+| `src/modules/practice/music/` | Núcleo puro: `score.ts` (o formato de PARTITURA) + `scores/*.ts` e `repertoire.ts` (repertório **gerado** por `tools/partituras-import/`) → `scoreToSong.ts` → `song.ts`; `fingerings.ts` (tabela de furos + tessitura real), `whistleTuning.ts` (transposição por afinação), `octave.ts` (oitava de leitura), `layout.ts` (compassos, sistemas e `placeSystem`), `scoreView.ts`, `notes.ts`, `tempo.ts`. |
 | `src/modules/practice/components/` | `Score` escolhe o modo → `ScoreBook` pagina → `StaffSystem` (com `rhythmFigure`) e/ou `TabSystem` desenham a mesma linha. Mais `PitchMeter`, `WhistleDiagram`, `SongEditor`, `HistoryPanel`. |
-| `tools/whistle-tab/` | Pipeline Python que decodifica as tablaturas da apostila (PDF) e **gera** `tunes.ts` (altura pelos furos, ritmo por `rhythms.py`). Ver o README de lá. Roda fora do build, na máquina com os PDFs. |
-| `src/music/` | ABC → alturas e armadura (do conversor, testado). `abcParser.ts` lê só alturas (casadas com o abcjs); `abcEvents.ts` lê o fluxo **rítmico** (durações, pausas, repetições abertas) que o Treino usa. `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
+| `tools/partituras-import/` | Traz as partituras canônicas do projeto "tabs in C tin whistle" (fora do repo) para `music/scores/*.ts` + `repertoire.ts`. Ver o README de lá. Roda fora do build. |
+| `tools/whistle-tab/` | Pipeline Python que decodifica as tablaturas da apostila (PDF). **Aposentado como fonte do repertório** (gerava o antigo `tunes.ts` em ABC, com ritmo por heurística); o decodificador de furos segue valendo. |
+| `src/music/` | ABC → alturas e armadura (do conversor, testado). `abcParser.ts` lê só alturas (casadas com o abcjs); `abcEvents.ts` lê o fluxo **rítmico** (durações, pausas, repetições abertas) - sobrou sem consumidor quando o Treino trocou ABC por partitura, mas é o caminho pronto para importar tune de sessão. `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
 | `src/whistle/` | Tabela cromática de digitação, mapeamento e render SVG (testado). |
 | `src/ui/alignedTab.ts`, `src/ui/export.ts` | Injeção alinhada dos diagramas + export SVG/PNG/PDF. |
 | `src/styles/global.css` | Tema tin whistle (verde Feadóg + latão), mobile-first. |
@@ -206,18 +207,35 @@ O que está codificado aqui:
 
 ### Treino: partitura e tablatura são a MESMA música
 
-- **ABC é a língua franca.** O repertório (`practice/music/tunes.ts`) é ABC, não
-  JSON de notas. `src/music/abcEvents.ts` lê o fluxo rítmico; `tuneToSong.ts` monta
-  a música do Treino. Nada de digitar melodia nota a nota em JSON - o JSON continua
-  valendo só para as músicas do usuário e os exercícios de aquecimento.
-- **`tunes.ts` é GERADO - não editar à mão.** Vem das tablaturas da apostila via
-  `tools/whistle-tab/` (ver o README de lá): a ALTURA é decodificada dos furos do
-  PDF; a DURAÇÃO é o ritmo real da melodia (`rhythms.py`) - airs à mão, danças em
-  colcheias. Para mexer no repertório, rode `python3 build_tunes.py`, não edite o
-  `.ts`. Só Inisheer vem de thesession.org.
+- **PARTITURA é a língua franca** (`practice/music/score.ts`), não ABC nem tab. O
+  ABC amarra grafia, duração e oitava num texto; a tab de furos não tem duração
+  NENHUMA. No modelo daqui cada coisa é um dado: altura em `step`+`alter`+`octave`
+  (a grafia sobrevive à transposição), duração em tempos de semínima, pausa como
+  `pitch: null`, e `timeSignature`/`pickupBeats`/`key` como campos. Dá para
+  converter daqui para qualquer notação; o contrário perde informação.
+- **O repertório é GERADO - não editar à mão.** `music/scores/*.ts` e
+  `repertoire.ts` vêm de `tools/partituras-import/` (ver o README de lá), que
+  traduz as partituras canônicas do projeto "tabs in C tin whistle": a ALTURA vem
+  decodificada da tablatura de 6 furos, a DURAÇÃO vem de uma versão de referência
+  citada em `source` (com o `rhythmMatch` medido nota a nota). Tune que já nasce
+  em ABC de sessão (Inisheer) mora em `abc_tunes.py` e é aberto em partitura no
+  mesmo passo - altura e ritmo vêm da mesma fonte, não há tab para decodificar.
+- **Ritmo não se inventa.** Foi assim que a versão anterior do repertório errou:
+  as durações saíam de heurística ("dança corre em colcheia"), e compasso,
+  anacruse e figura pontuada saíam errados. Quando não há fonte, o dado DIZ isso
+  (`SEM FONTE DE RITMO` no `source.rhythm` e no `warnings`, visível na ficha da
+  música) em vez de fingir ritmo - é o caso de This Old Man.
+- **A anacruse é campo, não convenção.** `pickupBeats` chega até `buildSystems`;
+  sem ela as barras da peça inteira saem deslocadas pelo tamanho do levare.
+  Partitura e layout usam a MESMA regra de quebra (`splitByBeats` em `score.ts`),
+  então o compasso contado e o compasso desenhado não podem divergir.
+- **Compasso torto fica declarado.** `irregularMeasures` grava os compassos que
+  não fecham (defeito herdado da fonte) e `repertoire.test.ts` exige que o
+  declarado bata com o medido - regerar e ganhar um compasso torto novo quebra o
+  teste em vez de passar batido.
 - **Dois leitores de ABC de propósito.** `abcParser.ts` (Conversor) precisa casar
   1-a-1 com os noteheads do abcjs, então descarta duração e pula pausa;
-  `abcEvents.ts` (Treino) precisa exatamente disso. Não tente fundir os dois sem
+  `abcEvents.ts` lê exatamente o que ele joga fora. Não tente fundir os dois sem
   resolver esse conflito de contrato.
 - **Escolher a whistle transpõe a peça.** A mesma digitação em outra afinação soa
   em outra altura - e é a altura real que o microfone julga. A transposição carrega
@@ -237,7 +255,7 @@ O que está codificado aqui:
 - **Oitava de leitura** (`octave.ts`, flag `lowerOctave`, ligada por padrão): o
   whistle é agudo, então a música desce em oitavas inteiras para a faixa legível
   da pauta (`READABLE_LOW/HIGH_MIDI`). É DISPLAY - o aviso de tessitura e o
-  `tuneToSong` seguem na música original; quem já está grave não se mexe (respeita
+  `scoreToSong` seguem na música original; quem já está grave não se mexe (respeita
   as transcrições fiéis do usuário). Com a leitura baixada, o dedilhado resolve
   por classe da nota (`fingeringAgnostic`), então não vira ✕ fora da oitava.
 - **Figuras de ritmo na pauta** (`rhythmFigure` em `StaffSystem.tsx`): a duração
@@ -424,7 +442,7 @@ do Vite precisa casar com `/<repo>/` no Pages.
 
 - **`CHANGELOG.md`** - registro completo da versão 2.0 (rename, migração vanilla→React,
   absorção do metrônomo e do treino, launcher, i18n, design) e do que veio depois
-  (2.2 afinador, 2.3 tablatura + repertório em ABC). Comece por aí para entender de
+  (2.2 afinador, 2.3 tablatura + repertório, 2.4 repertório em partitura). Comece por aí para entender de
   onde cada módulo veio.
 - **`README.md`** - visão geral, screenshots (`docs/img/`) e como rodar.
 - **Origens dos módulos**: o Conversor é a base deste repo (ex-*Whistle ABC*); o

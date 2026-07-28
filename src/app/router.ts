@@ -4,23 +4,34 @@ import { useSyncExternalStore } from "react";
 // #/practice) that survives a static host with no server rewrites - exactly what
 // GitHub Pages needs.
 
-export type RouteName = "home" | "converter" | "tuner" | "metronome" | "practice";
+export type RouteName =
+  | "home"
+  | "converter"
+  | "guide"
+  | "tuner"
+  | "metronome"
+  | "practice"
+  | "songmaker";
 
 const PATHS: Record<string, RouteName> = {
   "": "home",
   "/": "home",
   "/converter": "converter",
+  "/guide": "guide",
   "/tuner": "tuner",
   "/metronome": "metronome",
   "/practice": "practice",
+  "/songmaker": "songmaker",
 };
 
 const ROUTE_TO_HASH: Record<RouteName, string> = {
   home: "#/",
   converter: "#/converter",
+  guide: "#/guide",
   tuner: "#/tuner",
   metronome: "#/metronome",
   practice: "#/practice",
+  songmaker: "#/songmaker",
 };
 
 function parseHash(): RouteName {

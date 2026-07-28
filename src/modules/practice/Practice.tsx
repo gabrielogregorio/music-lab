@@ -5,8 +5,9 @@ import { useLibrary, useHistory, usePracticePrefs } from "./hooks/useStorage";
 import { prepareSong, type SongJSON } from "./music/song";
 import { WHISTLE_KEYS } from "./music/fingerings";
 import { readingShiftFor, shiftSongOctave } from "./music/octave";
-import { countOutOfRange } from "./music/tuneToSong";
-import { findTune } from "./music/tunes";
+import { countOutOfRange } from "./music/scoreToSong";
+import { findScore } from "./music/repertoire";
+import { scoreOrigin } from "./music/score";
 import { SCORE_VIEWS, type ScoreView } from "./music/scoreView";
 import { ptLabel } from "./music/notes";
 import { STATUS_COLOR } from "./status";
@@ -79,7 +80,7 @@ export function Practice() {
     }
   }, [displaySong]);
 
-  const tune = songJson ? findTune(songJson.id) : undefined;
+  const score = songJson ? findScore(songJson.id) : undefined;
   const outOfRange = songJson ? countOutOfRange(songJson, prefs.whistleKey) : 0;
   // O dedilhado resolve por classe (ignora a oitava) quando a leitura baixou a
   // música OU o usuário pediu para aceitar qualquer oitava.
@@ -216,7 +217,19 @@ export function Practice() {
                     key: prefs.whistleKey,
                   })}
                 </span>
-                {tune && <span className="dim song-origin">{tune.origin}</span>}
+                {score && (
+                  <span className="dim song-origin">
+                    {scoreOrigin(score)}
+                    {score.source.referenceUrl && (
+                      <>
+                        {" · "}
+                        <a href={score.source.referenceUrl} rel="noopener" target="_blank">
+                          {score.source.referenceName ?? score.source.referenceUrl}
+                        </a>
+                      </>
+                    )}
+                  </span>
+                )}
               </div>
               <div className="head-actions">
                 {isUserSong(songJson.id) && (
@@ -291,6 +304,7 @@ export function Practice() {
                 octaveAgnostic={fingeringAgnostic}
                 tempo={bpm}
                 timeSignature={songJson.timeSignature}
+                pickupBeats={songJson.pickupBeats}
               />
             )}
 
