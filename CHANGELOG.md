@@ -1,9 +1,123 @@
 # Changelog
 
+## 2.3.0 - Treino com tablatura e repertório de whistle
+
+O Treino ganha o modo que faltava para quem aprende pelo instrumento, e uma
+biblioteca de verdade. Nada do modo partitura foi perdido - a tablatura é um
+segundo par de óculos sobre a mesma música.
+
+### ABC como língua franca
+
+O repertório não é JSON de notas escrito à mão: é **ABC**, o mesmo formato que o
+Conversor já lê. `src/music/abcEvents.ts` é um leitor RÍTMICO de ABC - notas,
+pausas, durações, ritmo pontuado (`>`/`<`), quiálteras, ligaduras de valor,
+acordes, e repetições/casas (`|: :|`, `|1 :|2`) já abertas em sequência linear.
+
+Ele existe ao lado do `abcParser` em vez de substituí-lo porque os dois têm
+contratos diferentes: o `abcParser` precisa casar 1-a-1 com os noteheads que o
+abcjs desenha (por isso descarta duração e pula pausa); o Treino precisa
+exatamente do que ele joga fora. Mesma língua, dois leitores - e é essa língua
+comum que vai permitir fundir os dois módulos depois.
+
+### Escolher a whistle transpõe a música
+
+A regra do mundo real: a mesma digitação em outra afinação soa em outra altura. O
+seletor de whistle (Ré, Dó, Si♭, Lá, Sol, Fá, Mi♭) transpõe o repertório inteiro
+pelo intervalo entre as tônicas - **a digitação não muda, a altura sim**, e é a
+altura real que o microfone julga. Por isso toda música do repertório "cabe nos
+furinhos" de qualquer whistle.
+
+A transposição carrega dois números, semitons **e** graus diatônicos
+(`whistleTuning.ts`), porque só o par preserva a grafia: de Ré para Dó são 10
+semitons e 6 graus, então Fá♯ vira Mi - nunca Fá♭.
+
+### Correção: a whistle começava uma oitava abaixo
+
+`WHISTLE_KEYS` dava `rootMidi: 62` (D4) para a whistle em Ré. Uma soprano em Ré
+começa em **D5**. Com a raiz errada, a segunda oitava inteira era classificada
+como primeira e o `+` de sobressopro nunca aparecia onde devia. As tônicas agora
+saem de nomes científicos (`D5`, `C5`, `B♭4`…) e `whistleRange()` publica a
+tessitura real. As melodias em altura de concerto sobem sozinhas para a oitava do
+instrumento (`bestOctaveShift`), movendo o tune inteiro - nunca nota a nota.
+
+### A tablatura tem tempo
+
+A apostila de papel dá os dedos e nada mais - o aluno adivinha o ritmo. Aqui cada
+conjunto de dedos carrega a própria duração: figura rítmica em cima, barra de
+duração embaixo com largura proporcional à figura, e a coluna atual preenchendo
+essa barra conforme você sustenta. O `+` de sobressopro segue a convenção das
+apostilas. Esse mesmo `beats` também vira **figura na partitura** (bandeirola,
+cabeça vazada, ponto) e o **tempo que você segura** a nota no microfone - um
+número só para ver, tocar e ler.
+
+"Ignorar oitava" deixou de apagar a oitava do desenho: ela afrouxa o **julgamento**
+do microfone, não o que se ensina a tocar (`fingeringToShow`). Só entra como rede
+quando a nota não existe na tessitura, mostrando um dedilhado útil em vez de um ✕.
+
+### Integrado, não paralelo
+
+Partitura e tablatura são a mesma sequência, a mesma quebra de linha e a mesma
+virada de página. A geometria horizontal saiu do componente para `placeSystem`
+(`music/layout.ts`), então o dedilhado cai exatamente sob a sua nota; o
+`ScoreBook` cuida da paginação para os dois. Três modos: **Partitura**,
+**Tablatura**, **Partitura + tablatura** (o padrão), gravados em `localStorage`
+junto da whistle escolhida.
+
+### Repertório decodificado das tablaturas (12 melodias)
+
+Biblioteca agrupada (Aquecimento · Irlandesas e celtas · Baladas e tradicionais ·
+Suas músicas) com busca. Cada música mostra a **procedência** na ficha.
+
+**As ALTURAS não são mais escritas à mão - são LIDAS das tablaturas da apostila
+do curso.** `tools/whistle-tab/` renderiza cada PDF, acha os círculos por
+componentes conexos, lê furo a furo (cheio/vazado) e o `+` de sobressopro, e
+mapeia a digitação para a nota pela carta real do whistle em Ré.
+
+O **ritmo** é o da melodia real (`rhythms.py`), não o espaçamento cru do PDF (que
+saía quase todo igual): os airs sustentados - **Scarborough, Dawning of the Day,
+Auld Lang Syne** - têm a duração de cada nota escrita a partir da melodia
+(semínimas, mínimas de cadência, colcheias nas figuras rápidas, a "snap" escocesa
+do Auld Lang Syne); as danças, marchas e reels correm em colcheias com semínimas
+de cadência, que é o ritmo autêntico delas.
+
+Decodificadas das tablaturas (só PDFs com vídeo de referência no nível
+`~/Downloads` + tudo em `items/`; nunca partitura gravada nem superpartituras):
+Brian Boru's March, Down by the Sally Gardens, I'll Tell Me Ma, Johnny I Hardly
+Knew Ya, Raggle Taggle Gypsy, The Rattlin' Bog, The Dawning of the Day,
+Scarborough Fair, Greensleeves, Auld Lang Syne, Danza del Oso. Só **Inisheer**
+segue em ABC de thesession.org.
+
+Isto corrige a primeira leva, que tinha sido **arranjada à mão** e saíra com notas
+e ritmo errados (o Scarborough era outra melodia). Agora a altura é fiel à
+tablatura e a duração varia de verdade, não é mais tudo uma figura só.
+
+### Miudezas
+
+- **Figuras de ritmo na pauta** (`StaffSystem`): a partitura agora desenha a
+  duração de cada nota - bandeirola na colcheia, cabeça vazada na mínima, ponto
+  no pontuado - a partir do `beats` que a nota já carregava. O mesmo `beats` é o
+  tempo que se segura no microfone (duração × sustentação), então o que se vê é o
+  que se toca.
+- **Andamento ajustável**: um controle de BPM parte do sugerido de cada música e
+  vai de 40 a 208; ele entra na duração de cada nota (e no tempo de sustentação).
+- **Oitava de leitura** (`8↓`, ligada por padrão): o whistle é agudo e a 2ª
+  oitava cai acima da pauta, cheia de linhas suplementares. O flag baixa a
+  música em oitavas inteiras para a faixa legível da clave de sol - o Dó agudo
+  vira o Dó embaixo da pauta. É escolhido pela própria música (`octave.ts`):
+  quem já está grave (as transcrições do usuário) não se mexe. O dedilhado é o
+  mesmo (o padrão de furos se repete por oitava), então continua certo.
+- A sustentação vai até **200%** da figura: dá para exigir segurar mais que o
+  escrito, que é como se treina fôlego numa nota longa.
+- Aviso quando alguma nota da música cai fora dos furos da whistle escolhida.
+- Busca por nome na biblioteca.
+- 11 idiomas cobertos, como sempre.
+- `tools/whistle-tab/` fica no repo: o pipeline de leitura de tablatura é
+  reprodutível para acrescentar tunes novos.
+
 ## 2.2.0 - Afinador
 
 Quarta ferramenta do laboratório, em `#/tuner`. Nasceu aqui (as outras duas foram
-absorvidas de apps irmãos), a partir da pesquisa acumulada na wiki do Codex sobre
+absorvidas de apps irmãos), a partir da pesquisa acumulada na wiki sobre
 afinadores web - DSP, captura, produto e acessibilidade.
 
 ### A tese

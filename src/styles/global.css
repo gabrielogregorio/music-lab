@@ -317,6 +317,7 @@ body {
 
 textarea,
 select,
+input[type="search"],
 input[type="text"] {
   width: 100%;
   font-size: 0.92rem;
@@ -878,14 +879,67 @@ input[type="range"]:disabled {
   border-color: var(--warn);
   color: var(--warn);
 }
+.whistle-picker {
+  margin-top: 0.9rem;
+}
+.whistle-picker select {
+  width: 100%;
+}
+.whistle-hint {
+  margin: 0.3rem 0 0.8rem;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+.song-search {
+  width: 100%;
+  margin-top: 0.6rem;
+}
+.song-sections {
+  max-height: 52vh;
+  overflow-y: auto;
+}
+.song-section {
+  margin-top: 0.9rem;
+}
+.song-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.song-origin {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+}
+.view-switch {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+.view-switch .btn.active {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+.banner-warn {
+  margin-top: 0.6rem;
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
 .song-list {
   list-style: none;
-  margin: 0.8rem 0 0;
+  margin: 0.4rem 0 0;
   padding: 0;
   display: grid;
   gap: 0.3rem;
-  max-height: 60vh;
-  overflow-y: auto;
 }
 .song-item {
   padding: 0.5rem 0.6rem;
@@ -952,7 +1006,7 @@ input[type="range"]:disabled {
 .staff-page {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 /* próxima página: em cima e revelada por máscara (clip-path), sem encolher */
 .staff-page.overlay {
@@ -989,9 +1043,27 @@ input[type="range"]:disabled {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.staff-system {
+.staff-system,
+.tab-system {
   display: block;
   width: 100%;
+}
+/* Partitura e tablatura da MESMA linha ficam coladas: são duas grafias de um
+   trecho só, não dois sistemas independentes. */
+.score-line {
+  display: flex;
+  flex-direction: column;
+}
+.tab-rail {
+  stroke: #cdd6db;
+  stroke-width: 1;
+}
+.tab-rhythm {
+  font-size: 15px;
+}
+.tab-overblow {
+  font-size: 12px;
+  font-weight: 700;
 }
 .articulate-hint {
   margin-top: 0.4rem;
@@ -1539,4 +1611,19 @@ input[type="range"]:disabled {
   .tuner-controls {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.link-reset {
+  font: inherit;
+  font-size: 0.72rem;
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-strong);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-reset:hover {
+  color: var(--accent);
 }

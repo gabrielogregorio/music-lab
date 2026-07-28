@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fingeringForMidi, WHISTLE_KEYS } from "./fingerings";
+import { fingeringForMidi, fingeringToShow, WHISTLE_KEYS } from "./fingerings";
 
 const D_WHISTLE = WHISTLE_KEYS[0];
 
@@ -39,5 +39,26 @@ describe("fingeringForMidi", () => {
 
   it("returns null when octaveAgnostic and the pitch-class is not on the whistle", () => {
     expect(fingeringForMidi(D_WHISTLE.rootMidi + 1, "D", true)).toBeNull();
+  });
+});
+
+describe("fingeringToShow", () => {
+  const D_WHISTLE_ROOT = WHISTLE_KEYS[0].rootMidi;
+  const OCTAVE = 12;
+
+  it("marca sobressopro na 2ª oitava mesmo com a tolerância de oitava ligada", () => {
+    expect(fingeringToShow(D_WHISTLE_ROOT + OCTAVE, "D", true)?.overblow).toBe(true);
+  });
+
+  it("mantém a 1ª oitava sem sobressopro", () => {
+    expect(fingeringToShow(D_WHISTLE_ROOT, "D", true)?.overblow).toBe(false);
+  });
+
+  it("cai na classe da nota quando a altura não existe no instrumento", () => {
+    expect(fingeringToShow(D_WHISTLE_ROOT - OCTAVE, "D", true)?.holes).toEqual([1, 1, 1, 1, 1, 1]);
+  });
+
+  it("sem a rede ligada, nota fora da tessitura não tem dedilhado", () => {
+    expect(fingeringToShow(D_WHISTLE_ROOT - OCTAVE, "D", false)).toBeNull();
   });
 });

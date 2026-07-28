@@ -2,7 +2,7 @@
  * Diagrama de dedilhado do tin whistle para a nota alvo atual.
  * 6 furos verticais: cheio = fechado, vazado = aberto, meio = meia-abertura.
  */
-import { fingeringForMidi, type HoleState } from '../music/fingerings';
+import { fingeringToShow, type HoleState } from '../music/fingerings';
 import { holeFill, INACTIVE_HOLE_STROKE } from '../status';
 import { useTranslate } from '../../../i18n/i18n';
 
@@ -21,7 +21,7 @@ interface WhistleDiagramProps {
 
 export function WhistleDiagram({ midi, whistleKey, color, octaveAgnostic }: WhistleDiagramProps) {
   const translate = useTranslate();
-  const fingering = midi != null ? fingeringForMidi(midi, whistleKey, octaveAgnostic) : null;
+  const fingering = midi != null ? fingeringToShow(midi, whistleKey, octaveAgnostic ?? false) : null;
   return (
     <div className="whistle-diagram">
       <svg width={48} height={210} viewBox="0 0 48 210">

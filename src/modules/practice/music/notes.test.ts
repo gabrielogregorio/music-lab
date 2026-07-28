@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseNote, diatonicIndex, ptLabel, ptLabelFromMidi } from './notes';
 import { prepareSong } from './song';
-import { fingeringForMidi } from './fingerings';
+import { fingeringForMidi, whistleKeyById } from './fingerings';
 
 describe('parseNote', () => {
   it('parseia notas naturais', () => {
@@ -52,16 +52,19 @@ describe('prepareSong', () => {
 });
 
 describe('fingeringForMidi (whistle em D)', () => {
-  it('D4 (1º grau) = todos fechados', () => {
-    const f = fingeringForMidi(62, 'D');
-    expect(f?.holes).toEqual([1, 1, 1, 1, 1, 1]);
-    expect(f?.overblow).toBe(false);
+  const D_WHISTLE_ROOT = parseNote(whistleKeyById('D').rootName).midi;
+  const OCTAVE = 12;
+
+  it('D5, a nota mais grave do instrumento, fecha todos os furos', () => {
+    expect(fingeringForMidi(D_WHISTLE_ROOT, 'D')?.holes).toEqual([1, 1, 1, 1, 1, 1]);
   });
-  it('D5 = oitava com sobressopro', () => {
-    const f = fingeringForMidi(74, 'D');
-    expect(f?.overblow).toBe(true);
+  it('a nota mais grave não pede sobressopro', () => {
+    expect(fingeringForMidi(D_WHISTLE_ROOT, 'D')?.overblow).toBe(false);
   });
-  it('nota fora do range retorna null', () => {
-    expect(fingeringForMidi(40, 'D')).toBeNull();
+  it('D6, uma oitava acima, pede sobressopro', () => {
+    expect(fingeringForMidi(D_WHISTLE_ROOT + OCTAVE, 'D')?.overblow).toBe(true);
+  });
+  it('nota abaixo do instrumento não tem dedilhado', () => {
+    expect(fingeringForMidi(D_WHISTLE_ROOT - OCTAVE, 'D')).toBeNull();
   });
 });

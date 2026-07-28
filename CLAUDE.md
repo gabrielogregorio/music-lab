@@ -27,7 +27,7 @@ afinador próprio.
 | `#/converter` | **Conversor ABC** | ABC → partitura (abcjs) com a digitação de tin whistle alinhada sob cada nota; transpose, alongar notas, remover ligados; export SVG/PNG/PDF. |
 | `#/tuner` | **Afinador** | YIN em AudioWorklet+Worker; fita de história em cents, vibrato medido (centro/extensão/taxa), presets por instrumento, calibração do lá. Julga pelo **centro**, não pelo instante. |
 | `#/metronome` | **Metrônomo** | Pêndulo SVG, tap tempo, subdivisões, swing, acento por batida; timing sample-accurate via Web Audio. |
-| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents, pauta SVG). |
+| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents). Lê por **partitura**, por **tablatura de 6 furos** ou pelas duas; escolher a whistle transpõe o repertório (que mora em ABC). |
 
 ## Stack
 
@@ -75,7 +75,7 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | Caminho | Papel |
 |---|---|
 | `src/main.tsx`, `src/App.tsx` | Raiz React + shell (header com marca/idioma/tema, nav, footer). |
-| `src/i18n/` | Um arquivo de dicionário por idioma (`pt.ts`/`en.ts`/`es.ts`/`zh.ts`/`ja.ts`), tipos em `types.ts`, e `i18n.tsx` (monta `DICTS`, `I18nProvider`, `useT`/`useI18n`, `LANGS`, `translate`). Fallback: en. |
+| `src/i18n/` | Um arquivo de dicionário por idioma (11 deles: `pt`, `en`, `es`, `zh`, `ja`, `ga`, `gd`, `cy`, `fr`, `de`, `af`), tipos em `types.ts`, e `i18n.tsx` (monta `DICTS`, `I18nProvider`, `useTranslate`/`useI18n`, `LANGS`, `translate`). Fallback: en. |
 | `src/app/router.ts` | `useHashRoute` (rotas por `#/…`) + canal em memória (`pendingAbc`/`pendingTempo`) do launcher para os módulos. |
 | `src/app/useMountEffect.ts` | `useMountEffect(fn)`: `useEffect(fn, [])` nomeado, **último recurso** para ciclo de vida de sistema externo (motor de áudio + rAF, listener global de teclado). Prefira os padrões sem efeito antes dele (ver "useEffect - a regra de ouro"). O router migrou para `useSyncExternalStore`. |
 | `src/app/registry.ts` | Catálogo dos apps (ícone, chaves de nome/descrição/keywords) - usado por nav e launcher. |
@@ -85,18 +85,22 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/modules/converter/Converter.tsx` | UI React sobre os cores de `music/`, `whistle/`, `ui/`. |
 | `src/modules/tuner/` | Afinador. `core/` puro e testado (yin, cents, stability, vibrato, trace, presets); `audio/` (worklet coletor + worker YIN + engine); `hooks/`, `components/`. |
 | `src/modules/metronome/` | `Metronome.tsx` (UI + loop rAF) + `core/` (timing/áudio puro, testado). |
-| `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `music/`, `hooks/`, `components/` (React), `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
-| `src/music/` | ABC → alturas e armadura (do conversor, testado). `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
+| `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `hooks/`, `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
+| `src/modules/practice/music/` | Núcleo puro: `tunes.ts` (repertório em ABC, **gerado** por `tools/whistle-tab/`) → `tuneToSong.ts` → `song.ts`; `fingerings.ts` (tabela de furos + tessitura real), `whistleTuning.ts` (transposição por afinação), `octave.ts` (oitava de leitura), `layout.ts` (compassos, sistemas e `placeSystem`), `scoreView.ts`, `notes.ts`, `tempo.ts`. |
+| `src/modules/practice/components/` | `Score` escolhe o modo → `ScoreBook` pagina → `StaffSystem` (com `rhythmFigure`) e/ou `TabSystem` desenham a mesma linha. Mais `PitchMeter`, `WhistleDiagram`, `SongEditor`, `HistoryPanel`. |
+| `tools/whistle-tab/` | Pipeline Python que decodifica as tablaturas da apostila (PDF) e **gera** `tunes.ts` (altura pelos furos, ritmo por `rhythms.py`). Ver o README de lá. Roda fora do build, na máquina com os PDFs. |
+| `src/music/` | ABC → alturas e armadura (do conversor, testado). `abcParser.ts` lê só alturas (casadas com o abcjs); `abcEvents.ts` lê o fluxo **rítmico** (durações, pausas, repetições abertas) que o Treino usa. `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
 | `src/whistle/` | Tabela cromática de digitação, mapeamento e render SVG (testado). |
 | `src/ui/alignedTab.ts`, `src/ui/export.ts` | Injeção alinhada dos diagramas + export SVG/PNG/PDF. |
 | `src/styles/global.css` | Tema tin whistle (verde Feadóg + latão), mobile-first. |
 
 ### i18n
 
-- 5 idiomas, **um arquivo por idioma** (`src/i18n/pt.ts`, `en.ts`, `es.ts`, `zh.ts`,
-  `ja.ts`); os tipos (`Lang`, `Dict`, `Params`) moram em `src/i18n/types.ts` e o
-  `i18n.tsx` só monta o provider. Strings dinâmicas com params são funções `(p) => ...`.
-  **Ao adicionar UI, cubra as 5 línguas** (fallback en).
+- 11 idiomas, **um arquivo por idioma** (`pt`, `en`, `es`, `zh`, `ja`, `ga`, `gd`,
+  `cy`, `fr`, `de`, `af`); os tipos (`Lang`, `Dict`, `Params`) moram em
+  `src/i18n/types.ts` e o `i18n.tsx` só monta o provider. Strings dinâmicas com params
+  são funções `(p) => ...`. **Ao adicionar UI, cubra as 11 línguas** (fallback en);
+  `LANGS` em `i18n.tsx` é a lista canônica.
 - Componentes chamam `useTranslate()` (ou `useI18n()` quando precisam do `lang` atual, ex.:
   formatar data por locale) e guardam em `const translate = useTranslate()` - nome inteiro,
   nunca `t`. O provider re-renderiza tudo ao trocar de idioma; `translate` é estável por
@@ -199,6 +203,54 @@ O que está codificado aqui:
   leitura.
 - **Sopro aquece e sobe.** Whistle frio toca até 30¢ bemol; a faixa de busca
   alcança isso de propósito, pra poder mostrar o erro em vez de perder a nota.
+
+### Treino: partitura e tablatura são a MESMA música
+
+- **ABC é a língua franca.** O repertório (`practice/music/tunes.ts`) é ABC, não
+  JSON de notas. `src/music/abcEvents.ts` lê o fluxo rítmico; `tuneToSong.ts` monta
+  a música do Treino. Nada de digitar melodia nota a nota em JSON - o JSON continua
+  valendo só para as músicas do usuário e os exercícios de aquecimento.
+- **`tunes.ts` é GERADO - não editar à mão.** Vem das tablaturas da apostila via
+  `tools/whistle-tab/` (ver o README de lá): a ALTURA é decodificada dos furos do
+  PDF; a DURAÇÃO é o ritmo real da melodia (`rhythms.py`) - airs à mão, danças em
+  colcheias. Para mexer no repertório, rode `python3 build_tunes.py`, não edite o
+  `.ts`. Só Inisheer vem de thesession.org.
+- **Dois leitores de ABC de propósito.** `abcParser.ts` (Conversor) precisa casar
+  1-a-1 com os noteheads do abcjs, então descarta duração e pula pausa;
+  `abcEvents.ts` (Treino) precisa exatamente disso. Não tente fundir os dois sem
+  resolver esse conflito de contrato.
+- **Escolher a whistle transpõe a peça.** A mesma digitação em outra afinação soa
+  em outra altura - e é a altura real que o microfone julga. A transposição carrega
+  semitons **e** graus diatônicos (`whistleTuning.ts`); só o par preserva a grafia
+  (Fá♯ → Mi, nunca Fá♭).
+- **A tônica da whistle é a nota REAL.** Uma soprano em Ré começa em `D5`, não
+  `D4`. Com a raiz uma oitava abaixo, a 2ª oitava inteira passa por 1ª e o `+` de
+  sobressopro some. As melodias em altura de concerto sobem sozinhas para a oitava
+  do instrumento (`bestOctaveShift`), movendo o tune **inteiro**.
+- **"Ignorar oitava" é regra de julgamento, não de desenho.** Ela afrouxa o que o
+  microfone aceita; o dedilhado mostrado é sempre o da altura exata
+  (`fingeringToShow`), senão o `+` desaparece da segunda oitava. O modo tolerante
+  só entra como rede quando a nota não existe na tessitura.
+- **A geometria horizontal mora em `placeSystem`** (`music/layout.ts`), não no
+  componente: é o que mantém o dedilhado exatamente sob a sua nota. `ScoreBook`
+  pagina os dois modos juntos - eles viram a página no mesmo compasso.
+- **Oitava de leitura** (`octave.ts`, flag `lowerOctave`, ligada por padrão): o
+  whistle é agudo, então a música desce em oitavas inteiras para a faixa legível
+  da pauta (`READABLE_LOW/HIGH_MIDI`). É DISPLAY - o aviso de tessitura e o
+  `tuneToSong` seguem na música original; quem já está grave não se mexe (respeita
+  as transcrições fiéis do usuário). Com a leitura baixada, o dedilhado resolve
+  por classe da nota (`fingeringAgnostic`), então não vira ✕ fora da oitava.
+- **Figuras de ritmo na pauta** (`rhythmFigure` em `StaffSystem.tsx`): a duração
+  de cada nota vira desenho - bandeirola (colcheia/semicolcheia), cabeça vazada
+  (mínima+), ponto (pontuada) - derivada do `beats`. Não há **beam** (colcheias
+  ligadas por barra) ainda; são bandeirolas soltas.
+- **Um `beats`, três usos.** A duração de cada nota alimenta ao mesmo tempo o
+  desenho na pauta, a largura da coluna na tablatura e o tempo de sustentação no
+  microfone (`durationSec = beats × 60/BPM`, × `holdScale`). Ver não pode divergir
+  de tocar - mexeu num, confira os outros.
+- **Andamento ajustável** (estado `bpm` no `Practice.tsx`): parte do `tempo`
+  sugerido da música e reseta ao trocar de faixa (padrão "storing previous
+  value", sem efeito). Entra em `displaySong.tempo` → `prepareSong` → durações.
 
 ### Metrônomo (timing)
 
@@ -371,8 +423,9 @@ do Vite precisa casar com `/<repo>/` no Pages.
 ## Histórico e docs
 
 - **`CHANGELOG.md`** - registro completo da versão 2.0 (rename, migração vanilla→React,
-  absorção do metrônomo e do treino, launcher, i18n, design). Comece por aí para
-  entender de onde cada módulo veio.
+  absorção do metrônomo e do treino, launcher, i18n, design) e do que veio depois
+  (2.2 afinador, 2.3 tablatura + repertório em ABC). Comece por aí para entender de
+  onde cada módulo veio.
 - **`README.md`** - visão geral, screenshots (`docs/img/`) e como rodar.
 - **Origens dos módulos**: o Conversor é a base deste repo (ex-*Whistle ABC*); o
   Metrônomo veio do app *MusicStudio*; o Treino veio do *Perfect Partituras*. Os cores

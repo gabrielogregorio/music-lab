@@ -49,6 +49,49 @@ export function measureBeatsOf(timeSignature?: [number, number]): number {
   return (num * 4) / den;
 }
 
+export interface PlacedNote {
+  laidNote: LNote;
+  /** Centro horizontal da nota no viewBox do sistema. */
+  cx: number;
+  /** Largura da fatia que a nota ocupa - é o "tempo" dela, em pixels. */
+  width: number;
+}
+
+export interface PlacedSystem {
+  notes: PlacedNote[];
+  /** x de cada barra de compasso. */
+  bars: number[];
+}
+
+/**
+ * Geometria horizontal de um sistema: justifica os compassos na largura útil e
+ * devolve onde cada nota cai. Mora aqui (e não no componente) porque partitura
+ * e tablatura precisam do MESMO x - é o que mantém o dedilhado exatamente sob
+ * a sua nota quando os dois modos aparecem juntos.
+ */
+export function placeSystem(system: System): PlacedSystem {
+  const available = SYS_W - LEAD - RIGHT_PAD;
+  const naturalWidths = system.measures.map(measureNaturalWidth);
+  const totalNatural = naturalWidths.reduce((sum, width) => sum + width, 0) || 1;
+  const scale = available / totalNatural;
+
+  const notes: PlacedNote[] = [];
+  const bars: number[] = [];
+  let measureX = LEAD;
+  system.measures.forEach((measure, measureIndex) => {
+    let noteX = measureX;
+    measure.notes.forEach((laidNote) => {
+      const width = noteSpacing(laidNote.note.beats) * scale;
+      notes.push({ laidNote, cx: noteX + width / 2, width });
+      noteX += width;
+    });
+    measureX += naturalWidths[measureIndex] * scale;
+    bars.push(measureX);
+  });
+
+  return { notes, bars };
+}
+
 /**
  * Divide as notas em compassos (fecha antes de estourar o compasso) e
  * empacota os compassos em sistemas que cabem em SYS_W.
