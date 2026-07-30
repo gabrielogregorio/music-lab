@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { rhythmFigure } from './StaffSystem';
+import { rhythmFigure, noteAppearance } from './StaffSystem';
+
+describe('noteAppearance', () => {
+  const ACCENT = '#123456';
+
+  it('no Treino, a nota por vir fica acinzentada e translúcida', () => {
+    const upcoming = noteAppearance(5, 2, ACCENT);
+    expect(upcoming.opacity).toBeLessThan(1);
+    expect(upcoming.color).not.toBe('#010f17');
+  });
+
+  it('no modo Leitura, toda nota é tinta cheia (preta, opacidade 1), sem cinza', () => {
+    // Mesma nota "por vir" do caso acima, agora em leitura: nada de cinza.
+    const reading = noteAppearance(5, 2, ACCENT, true);
+    expect(reading.opacity).toBe(1);
+    expect(reading.color).toBe('#010f17');
+  });
+});
 
 describe('rhythmFigure', () => {
   it('colcheia: cabeça cheia, haste, uma bandeirola', () => {

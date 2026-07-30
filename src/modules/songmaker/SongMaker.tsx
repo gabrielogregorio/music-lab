@@ -23,8 +23,11 @@ import {
   PERCUSSION_INSTRUMENTS,
   type MelodyInstrument,
   type PercussionInstrument,
-} from "./audio/synth";
+} from "../../audio/voices";
 import { SettingsModal } from "./SettingsModal";
+import { buildSongPlan } from "./export/plan";
+import { songToMidiBytes } from "./export/midi";
+import { renderSongToWav } from "./export/wav";
 
 const STORAGE_KEY = "music-lab:songmaker";
 const MIN_TEMPO = 40;
@@ -70,6 +73,7 @@ export function SongMaker() {
   const [playing, setPlaying] = useState(false);
   const [activeCol, setActiveCol] = useState(NO_COLUMN);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [history, setHistory] = useState<Snapshot[]>([]);
 
   const pitches = useMemo(() => buildPitches(config.rootMidi, config.scaleId, config.octaves), [config]);
@@ -173,14 +177,34 @@ export function SongMaker() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(currentSong()));
   };
 
-  const download = () => {
-    const blob = new Blob([JSON.stringify(currentSong(), null, 2)], { type: "application/json" });
+  const saveBytes = (bytes: BlobPart, filename: string, type: string) => {
+    const blob = new Blob([bytes], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "song-maker.json";
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportPlan = () => buildSongPlan(melody, percussion, pitches, config.subdivisions, cols, tempo);
+
+  const downloadJson = () => {
+    saveBytes(JSON.stringify(currentSong(), null, 2), "song-maker.json", "application/json");
+  };
+
+  const downloadMidi = () => {
+    saveBytes(songToMidiBytes(exportPlan()), "song-maker.mid", "audio/midi");
+  };
+
+  const downloadWav = async () => {
+    setExporting(true);
+    try {
+      const bytes = await renderSongToWav(exportPlan(), melodyInstrument, percussionInstrument);
+      saveBytes(bytes, "song-maker.wav", "audio/wav");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const gridColumns = `repeat(${cols}, minmax(0, 1fr))`;
@@ -300,9 +324,20 @@ export function SongMaker() {
           <button type="button" className="btn-sm" onClick={save} aria-label={translate("editor.save")}>
             ✓ {translate("editor.save")}
           </button>
-          <button type="button" className="btn-sm" onClick={download} aria-label={translate("songmaker.download")}>
-            ↓ {translate("songmaker.download")}
-          </button>
+          <details className="sm-download">
+            <summary className="btn-sm">↓ {translate("songmaker.download")}</summary>
+            <div className="sm-download-menu">
+              <button type="button" className="btn-sm" onClick={downloadJson}>
+                {translate("songmaker.downloadJson")}
+              </button>
+              <button type="button" className="btn-sm" onClick={downloadMidi}>
+                {translate("songmaker.downloadMidi")}
+              </button>
+              <button type="button" className="btn-sm" onClick={downloadWav} disabled={exporting}>
+                {exporting ? translate("songmaker.exporting") : translate("songmaker.downloadWav")}
+              </button>
+            </div>
+          </details>
         </div>
       </div>
 

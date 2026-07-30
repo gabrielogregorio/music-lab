@@ -14,6 +14,7 @@ import {
 } from "./instruments";
 import { HoleDiagram } from "./HoleDiagram";
 import { HoldGuide } from "./HoldGuide";
+import { TheoryReference } from "./TheoryReference";
 
 const MODES: GuideMode[] = ["scale", "chromatic"];
 
@@ -115,6 +116,8 @@ export function Guide() {
           <span className="guide-swatch ring" aria-hidden="true" /> {translate("legend.octave")}
         </li>
       </ul>
+
+      <TheoryReference />
     </section>
   );
 }

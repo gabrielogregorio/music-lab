@@ -46,6 +46,9 @@ const DOT_GAP_X = 4;
 const PLAYED_NOTE_COLOR = '#2f7d63';
 const UPCOMING_NOTE_COLOR = '#6b8a99';
 const HOLLOW_HEAD_FILL = '#010f17';
+// Modo Leitura: sem cursor, a peça inteira é tinta cheia. Não é o cinza de "nota
+// por vir" do Treino - aqui não há nota atual para diferenciar do resto.
+const READING_NOTE_COLOR = '#010f17';
 const PLAYED_OPACITY = 0.85;
 const UPCOMING_OPACITY = 0.5;
 const CURRENT_OPACITY = 1;
@@ -59,7 +62,13 @@ interface NoteAppearance {
 }
 
 /** Cor e opacidade de uma nota conforme já passou, é a atual, ou está por vir. */
-export function noteAppearance(noteIndex: number, currentIndex: number, accent: string): NoteAppearance {
+export function noteAppearance(
+  noteIndex: number,
+  currentIndex: number,
+  accent: string,
+  reading = false,
+): NoteAppearance {
+  if (reading) return { color: READING_NOTE_COLOR, opacity: CURRENT_OPACITY };
   if (noteIndex < currentIndex) return { color: PLAYED_NOTE_COLOR, opacity: PLAYED_OPACITY };
   if (noteIndex === currentIndex) return { color: accent, opacity: CURRENT_OPACITY };
   return { color: UPCOMING_NOTE_COLOR, opacity: UPCOMING_OPACITY };
@@ -114,6 +123,8 @@ export interface SystemViewProps {
   holdProgress: number;
   tempo?: number;
   timeSignature?: [number, number];
+  /** Modo Leitura: tinta cheia na peça inteira, sem cursor nem cinza de status. */
+  reading?: boolean;
 }
 
 export function StaffSystem({
@@ -125,6 +136,7 @@ export function StaffSystem({
   holdProgress,
   tempo,
   timeSignature,
+  reading = false,
 }: SystemViewProps) {
   const accent = STATUS_COLOR[status];
   const { notes, bars } = placeSystem(system);
@@ -191,7 +203,7 @@ export function StaffSystem({
         const cy = noteY(diatonic);
         const step = diatonic - E4_DIATONIC;
 
-        const { color, opacity } = noteAppearance(noteIndex, currentIndex, accent);
+        const { color, opacity } = noteAppearance(noteIndex, currentIndex, accent, reading);
 
         const ledgers: number[] = [];
         if (step < 0) {

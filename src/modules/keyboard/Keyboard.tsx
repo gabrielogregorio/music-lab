@@ -21,7 +21,7 @@ import {
 } from "./music/keys";
 import { buildTimeline } from "./music/playback";
 import { KeyboardEngine } from "./audio/engine";
-import { MELODY_INSTRUMENTS, type MelodyInstrument } from "../songmaker/audio/synth";
+import { MELODY_INSTRUMENTS, type MelodyInstrument } from "../../audio/voices";
 import { Piano } from "./components/Piano";
 import { FallingNotes } from "./components/FallingNotes";
 

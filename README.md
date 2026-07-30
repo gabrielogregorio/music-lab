@@ -23,9 +23,9 @@ Conversor ABC → digitação · Afinador · Metrônomo · Treino de afinação 
 | `#/converter` | **🎼 Conversor ABC** | Cole um tune em [ABC](https://abcnotation.com/) e receba a partitura com a **digitação de tin whistle alinhada sob cada nota**. Transponha, **alongue as notas** para acalmar um tune agitado, remova ligados e exporte em SVG, PNG ou PDF. |
 | `#/tuner` | **🎯 Afinador** | Afina pelo **centro** da nota, não pelo instante. Mostra a fita de história em cents (vibrato vira onda, deriva de sopro vira rampa), **mede o vibrato** (centro, largura e taxa) e traz a oitava na tela. Presets por instrumento, lá calibrável de 415 a 466 Hz. |
 | `#/metronome` | **🕰️ Metrônomo** | Pêndulo dançante, tap tempo, subdivisões, swing e acento por batida. Timing *sample-accurate* via Web Audio. |
-| `#/practice` | **🎤 Treino** | Toque no microfone e avance nota a nota **só quando acertar a afinação** (detecção de pitch NSDF, tolerância em cents, pauta em SVG). Repertório de 18 melodias em **partitura** - altura decodificada da tablatura de furos, ritmo vindo de fonte citada; escolher a whistle transpõe a peça inteira. Modos Treino (mic) e Leitura (peça inteira). |
+| `#/practice` | **🎤 Treino** | Toque no microfone e avance nota a nota **só quando acertar a afinação** (detecção de pitch NSDF, tolerância em cents, pauta em SVG). Repertório de 20 melodias em **partitura** - altura decodificada da tablatura de furos, ritmo vindo de fonte citada; escolher a whistle transpõe a peça inteira. Modos Treino (mic) e Leitura (peça inteira). |
 | `#/guide` | **🖐️ Digitações** | Carta visual de como cada nota é digitada na tin whistle, fife e recorder. |
-| `#/songmaker` | **🎛️ Song Maker** | Grade sequenciadora (melodia + percussão) no espírito do Chrome Music Lab; áudio Web Audio, sem samples. |
+| `#/songmaker` | **🎛️ Song Maker** | Grade sequenciadora (melodia + percussão) no espírito do Chrome Music Lab; áudio Web Audio, sem samples. **16 vozes** e 3 linhas de percussão; exporta JSON, **MIDI** e **WAV** direto no navegador. |
 | `#/keyboard` | **🎹 Teclado** | Piano na tela que toca a **mesma biblioteca do Treino**. Ajuste a quantidade de teclas e o som, e veja as **notas caindo** (estilo Synthesia) no tempo da música. |
 
 <div align="center">
@@ -91,6 +91,7 @@ src/
   main.tsx, App.tsx        raiz React + shell (header, nav, footer)
   i18n/i18n.tsx            dicionários dos 11 idiomas + provider React (useTranslate / useI18n)
   songs/                   ponto global das músicas: useSongLibrary (Treino + Teclado) + localStore
+  audio/voices.ts          biblioteca compartilhada de vozes Web Audio (Song Maker + Teclado) [testado]
   app/
     router.ts             hash router + canal launcher→módulo (pendingAbc / pendingTempo)
     registry.ts           catálogo dos apps (nav + launcher)
@@ -105,7 +106,7 @@ src/
     practice/             Treino: audio/ (pitch NSDF), music/ (partitura + repertório),
                           hooks/, components/                                       [testado]
     guide/                Digitações: carta visual por instrumento                  [testado]
-    songmaker/            Song Maker: grade sequenciadora + síntese Web Audio       [testado]
+    songmaker/            Song Maker: grade + síntese + export MIDI/WAV (export/)   [testado]
     keyboard/             Teclado: music/ (teclas, timeline, notas caindo) +
                           audio/engine.ts + Piano/FallingNotes                      [testado]
   music/                  leitura de ABC, alturas, armadura + transform.ts (durações,

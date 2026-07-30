@@ -1,5 +1,54 @@
 # Changelog
 
+## 2.8.0 - Referência de teoria no guia e Leitura em tinta cheia
+
+### Digitações: material de teoria (de → para dos nomes)
+
+O guia (`#/guide`) ganhou uma seção de **referência** abaixo da carta de digitação:
+uma tabela de → para casando **solfejo ↔ letra (A-G) ↔ notação ABC** (oitava média e
+aguda, mais os semitons a partir de Dó), a escala de Dó maior por extenso, e resumos
+curtos de **o que é uma escala**, **o que é cromático**, **como ler a partitura** e
+**como ler a notação ABC irlandesa** (com um exemplo). Os dados são puros e testados
+(`guide/theory.ts`); os textos moram no i18n em pt e en, com fallback en nos outros 9
+idiomas (traduzir teoria musical à máquina para galês/gaélico etc. arriscaria a
+correção - fica pendente de tradução humana).
+
+### Treino: modo Leitura em tinta cheia
+
+No modo **Leitura** a partitura (e a tablatura) saíam em cinza-claro, como se fosse a
+nota "por vir" do Treino - mas em Leitura não há cursor, é a peça inteira para tocar por
+conta. Agora a Leitura desenha tudo em tinta cheia (preto, opacidade 1); o cinza de
+status só existe no Treino, onde diferencia nota tocada / atual / por vir
+(`noteAppearance(..., reading)`).
+
+## 2.7.0 - Vozes compartilhadas, Song Maker maior e export de MIDI/WAV
+
+### Biblioteca de vozes compartilhada
+
+As vozes Web Audio saíram de dentro do Song Maker (`songmaker/audio/synth.ts`) para
+`src/audio/voices.ts`, um **ponto compartilhado** que o Song Maker e o Teclado tocam
+juntos. De 6 subiu para **16 vozes melódicas** (marimba, piano, strings, woodwind,
+synth, flute - intocadas - mais music box, bells, bass, organ, harp, brass, clarinet,
+vibraphone, accordion, guitar, com partial de oitava, detune ou vibrato conforme o
+timbre), todas ainda sintetizadas, sem sample (a CSP do Pages não deixaria carregar).
+
+### Song Maker: mais grade
+
+A melodia ganhou **2 linhas** no topo (`EXTRA_TOP_ROWS`, continuando a escala acima da
+tônica de fechamento) e a percussão foi de 2 para **3 linhas** (`PERCUSSION_ROWS`) -
+uma 3ª batida mais grave. O que já existia ficou intocado: os índices de linha antigos
+seguem apontando para a mesma altura/som, então músicas salvas continuam casando.
+
+### Export em MIDI e WAV
+
+O menu de baixar agora oferece, além do JSON: **MIDI** (`.mid`, Standard MIDI File
+formato 0 - melodia no canal 1, percussão no canal 10 de bateria) e **áudio WAV**
+(`.wav`, renderizado num `OfflineAudioContext` com as mesmas vozes e codificado em PCM
+16 bits). Tudo nativo, sem dependência nova. MP3 ficou de fora de propósito: exigiria
+embarcar um encoder (lamejs), e WAV já entrega o áudio lossless sem esse peso. O plano
+da música (`export/plan.ts`) e os bytes de MIDI/encoder de WAV são puros e testados; só
+o render em si depende do navegador.
+
 ## 2.6.0 - Teclado, e as músicas viraram ponto global
 
 ### As músicas saíram de dentro do Treino

@@ -6,7 +6,7 @@
  * que a CSP do Pages barraria. É um sistema externo (AudioContext + rAF)
  * encapsulado numa classe; o componente o dirige por handlers, sem efeito.
  */
-import { playMelodyNote, type MelodyInstrument } from '../../songmaker/audio/synth';
+import { playMelodyNote, type MelodyInstrument } from '../../../audio/voices';
 import { noteIndexAt, type Timeline } from '../music/playback';
 
 const LOOKAHEAD_SEC = 0.1;

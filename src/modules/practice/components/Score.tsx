@@ -58,7 +58,7 @@ export function Score({
 
   const showStaff = view === 'staff' || view === 'both';
   const showTab = view === 'tab' || view === 'both';
-  const shared = { currentIndex, status, direction, holdProgress, tempo, timeSignature };
+  const shared = { currentIndex, status, direction, holdProgress, tempo, timeSignature, reading: expanded };
 
   const renderSystem = (system: System, index: number) => (
     <>

@@ -778,6 +778,94 @@ button.primary:hover {
   border-style: dashed;
 }
 
+/* Referência de teoria (de → para dos nomes, escala, cromático, partitura, ABC) */
+.guide-theory {
+  margin-top: 0.6rem;
+  border: 1px solid var(--brass);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 1rem;
+}
+.guide-theory > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 0.9rem 0;
+  list-style: none;
+}
+.guide-theory > summary::-webkit-details-marker {
+  display: none;
+}
+.guide-theory > summary::before {
+  content: "▸ ";
+}
+.guide-theory[open] > summary::before {
+  content: "▾ ";
+}
+.guide-theory-body {
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.guide-theory-body h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--accent);
+}
+.guide-theory-intro {
+  margin: 0;
+  color: #333;
+}
+.guide-theory-section p {
+  margin: 0.2rem 0 0;
+  line-height: 1.5;
+}
+.guide-theory-scroll {
+  overflow-x: auto;
+}
+.guide-theory-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 340px;
+}
+.guide-theory-table th,
+.guide-theory-table td {
+  border: 1px solid #e2d9c5;
+  padding: 0.4rem 0.6rem;
+  text-align: center;
+}
+.guide-theory-table th {
+  background: var(--brass);
+  color: #fff;
+  font-weight: 600;
+}
+.guide-theory .mono,
+.guide-theory-example .mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.guide-theory-cmajor {
+  margin: 0;
+}
+.guide-theory-example {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.guide-theory-example-label {
+  font-size: 0.9rem;
+  color: #555;
+}
+.guide-theory-example pre {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  background: #f6f1e6;
+  border: 1px solid #e2d9c5;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.4;
+}
+
 /* ---------- Song Maker ---------- */
 .songmaker {
   max-width: 1120px;
@@ -941,6 +1029,34 @@ button.primary:hover {
   gap: 0.4rem;
   margin-left: auto;
   flex-wrap: wrap;
+}
+.sm-download {
+  position: relative;
+}
+.sm-download > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.sm-download > summary::-webkit-details-marker {
+  display: none;
+}
+.sm-download-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem;
+  background: #fff;
+  border: 1px solid var(--brass);
+  border-radius: 9px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+.sm-download-menu .btn-sm {
+  white-space: nowrap;
+  text-align: left;
 }
 .sm-settings {
   position: relative;

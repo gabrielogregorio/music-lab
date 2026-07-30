@@ -38,8 +38,14 @@ export interface Pitch {
   degreeIndex: number;
 }
 
+// Duas notas a mais no topo, além da tônica de fechamento: mais alturas graves/
+// agudas para o usuário brincar sem mexer no que já existe (as linhas de baixo
+// mantêm o mesmo índice, então músicas salvas seguem casando).
+export const EXTRA_TOP_ROWS = 2;
+
 // Alturas ascendentes: `octaves` oitavas da escala a partir de rootMidi, mais a
-// tônica do topo (como o Music Lab, que fecha a faixa na oitava de cima).
+// tônica do topo (como o Music Lab, que fecha a faixa na oitava de cima) e mais
+// EXTRA_TOP_ROWS graus continuando a escala acima dela.
 export function buildPitches(rootMidi: number, scaleId: ScaleId, octaves: number): Pitch[] {
   const scale = SCALES[scaleId];
   const pitches: Pitch[] = [];
@@ -49,6 +55,14 @@ export function buildPitches(rootMidi: number, scaleId: ScaleId, octaves: number
     });
   }
   pitches.push({ midi: rootMidi + octaves * SEMITONES_PER_OCTAVE, degreeIndex: 0 });
+  for (let extra = 1; extra <= EXTRA_TOP_ROWS; extra += 1) {
+    const degreeIndex = extra % scale.length;
+    const octaveOffset = Math.floor(extra / scale.length);
+    pitches.push({
+      midi: rootMidi + (octaves + octaveOffset) * SEMITONES_PER_OCTAVE + scale[degreeIndex],
+      degreeIndex,
+    });
+  }
   return pitches;
 }
 

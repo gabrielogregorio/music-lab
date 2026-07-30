@@ -26,6 +26,7 @@ import { DANZA_DEL_OSO } from './scores/danza-del-oso';
 import { SKYE_BOAT_SONG } from './scores/skye-boat-song';
 import { SCOTLAND_THE_BRAVE } from './scores/scotland-the-brave';
 import { THIS_OLD_MAN } from './scores/this-old-man';
+import { IN_TABERNA } from './scores/in-taberna';
 
 export const REPERTOIRE: ScoreJSON[] = [
   INISHEER,
@@ -47,6 +48,7 @@ export const REPERTOIRE: ScoreJSON[] = [
   SKYE_BOAT_SONG,
   SCOTLAND_THE_BRAVE,
   THIS_OLD_MAN,
+  IN_TABERNA,
 ];
 
 /** A partitura do repertório com esse id, ou undefined se a música não vier daqui. */

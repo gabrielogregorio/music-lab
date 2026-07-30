@@ -72,6 +72,7 @@ export function TabSystem({
   holdProgress,
   whistleKey,
   octaveAgnostic,
+  reading = false,
 }: TabSystemProps) {
   const accent = STATUS_COLOR[status];
   const { notes, bars } = placeSystem(system);
@@ -93,7 +94,7 @@ export function TabSystem({
         const noteIndex = laidNote.index;
         const note = laidNote.note;
         const isCurrent = noteIndex === currentIndex;
-        const { color, opacity } = noteAppearance(noteIndex, currentIndex, accent);
+        const { color, opacity } = noteAppearance(noteIndex, currentIndex, accent, reading);
         const barWidth = Math.max(6, width - COLUMN_PADDING * 2);
 
         if (note.isRest) {

@@ -8,7 +8,7 @@ import {
   makeNoiseBuffer,
   type MelodyInstrument,
   type PercussionInstrument,
-} from "./synth";
+} from "../../../audio/voices";
 
 export interface EngineSnapshot {
   totalCols: number;

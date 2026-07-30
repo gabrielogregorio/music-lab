@@ -22,7 +22,9 @@ export const DEFAULT_CONFIG: SongConfig = {
   octaves: 2,
 };
 
-export const PERCUSSION_ROWS = 2;
+// 3 linhas de batida (agudo, grave e uma 3ª mais grave/acento). Eram 2; a 3ª foi
+// somada mantendo o som das duas primeiras.
+export const PERCUSSION_ROWS = 3;
 
 export function totalColumns(config: SongConfig): number {
   return config.bars * config.beatsPerBar * config.subdivisions;
