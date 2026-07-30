@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.10.1 - Treino: a sustentação volta a encolher com o andamento
+
+No Treino, cada nota precisava ser segurada por ~mais tempo que o "certo" e isso não
+diminuía ao acelerar o andamento. Causa: o piso de sustentação (`minHoldMs`) era de
+**350 ms**, e num andamento rápido a nota já dura menos que isso - então o piso passava a
+mandar e o tempo de sustentação parava de encolher com o BPM (você segurava mais do que a
+própria nota durava). O piso caiu para **150 ms** (~uma janela de análise, o mínimo
+detectável), então `requiredHoldSec = max(150 ms, duração × holdScale)` volta a encolher
+com o andamento. O cálculo virou função pura testada (`requiredHoldSec`).
+
 ## 2.10.0 - Afinador cromático: ouve o som, não o instrumento
 
 O afinador "não registrava" quando você tocava fora do estreito - inclusive tocando

@@ -20,7 +20,11 @@ export interface PracticeSettings {
   toleranceCents: number;
   /** Fração da duração da nota que é preciso sustentar (0.3..1). */
   holdScale: number;
-  /** Tempo mínimo de sustentação em ms, independente da duração. */
+  /**
+   * Piso absoluto de sustentação em ms, independente da duração - o mínimo que a
+   * análise confirma dado o atraso da janela. Baixo de propósito: um piso alto
+   * fazia a nota rápida exigir mais que a própria duração (ver `requiredHoldSec`).
+   */
   minHoldMs: number;
   /** Aceita a nota certa em qualquer oitava (casa por nome, não por altura). */
   ignoreOctave: boolean;
@@ -31,7 +35,9 @@ export interface PracticeSettings {
 export const DEFAULT_SETTINGS: PracticeSettings = {
   toleranceCents: 30,
   holdScale: 0.7,
-  minHoldMs: 350,
+  // ~1 janela de análise (FFT 4096 ≈ 93 ms) mais uma folga: o mínimo detectável,
+  // sem estourar o andamento das notas rápidas como os 350 ms antigos faziam.
+  minHoldMs: 150,
   ignoreOctave: true,
   requireTongue: false,
 };
@@ -100,6 +106,20 @@ export function statusForCents(absCents: number, toleranceCents: number): NoteSt
 /** Acurácia 0..1 da nota a partir do desvio médio dentro da tolerância. */
 export function noteAccuracy(avgDevCents: number, toleranceCents: number): number {
   return Math.max(0, Math.min(1, 1 - avgDevCents / toleranceCents));
+}
+
+/**
+ * Quanto tempo (s) é preciso sustentar a nota para avançar: uma fração da duração
+ * dela (`holdScale`) - que ENCOLHE com o andamento (nota rápida pede menos hold) -
+ * mas nunca abaixo de um piso absoluto (`minHoldMs`), o mínimo que a análise
+ * consegue confirmar dado o atraso da janela.
+ *
+ * O piso é baixo de propósito. Antes eram 350 ms: num andamento rápido a nota já
+ * dura menos que isso, então o piso passava a mandar e o tempo de sustentação
+ * parava de encolher com o andamento - virava um "segure ~mais que o certo" fixo.
+ */
+export function requiredHoldSec(durationSec: number, holdScale: number, minHoldMs: number): number {
+  return Math.max(minHoldMs / MS_PER_SECOND, durationSec * holdScale);
 }
 
 export function usePractice(
@@ -209,9 +229,10 @@ export function usePractice(
 
       const currentSettings = settingsRef.current;
       const tolerance = Math.max(MIN_TOLERANCE_CENTS, currentSettings.toleranceCents);
-      const requiredHold = Math.max(
-        currentSettings.minHoldMs / MS_PER_SECOND,
-        note.durationSec * currentSettings.holdScale,
+      const requiredHold = requiredHoldSec(
+        note.durationSec,
+        currentSettings.holdScale,
+        currentSettings.minHoldMs,
       );
 
       // Gate do "TU": alimenta com "houve folga?" e vê se um ataque novo abriu.

@@ -300,8 +300,12 @@ O que está codificado aqui:
   ligadas por barra) ainda; são bandeirolas soltas.
 - **Um `beats`, três usos.** A duração de cada nota alimenta ao mesmo tempo o
   desenho na pauta, a largura da coluna na tablatura e o tempo de sustentação no
-  microfone (`durationSec = beats × 60/BPM`, × `holdScale`). Ver não pode divergir
-  de tocar - mexeu num, confira os outros.
+  microfone (`requiredHoldSec = max(minHoldMs, durationSec × holdScale)`, com
+  `durationSec = beats × 60/BPM`). Ver não pode divergir de tocar - mexeu num,
+  confira os outros. **O piso `minHoldMs` é baixo (150 ms) de propósito**: um piso
+  alto (eram 350 ms) fazia a nota rápida exigir mais que a própria duração, e aí o
+  tempo de sustentação parava de encolher com o andamento - o sintoma "seguro
+  ~mais que o certo mesmo acelerando o BPM".
 - **Andamento ajustável** (estado `bpm` no `Practice.tsx`): parte do `tempo`
   sugerido da música e reseta ao trocar de faixa (padrão "storing previous
   value", sem efeito). Entra em `displaySong.tempo` → `prepareSong` → durações.

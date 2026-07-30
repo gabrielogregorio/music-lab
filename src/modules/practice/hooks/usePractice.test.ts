@@ -1,7 +1,31 @@
 import { describe, it, expect } from "vitest";
-import { statusForCents, noteAccuracy } from "./usePractice";
+import { statusForCents, noteAccuracy, requiredHoldSec, DEFAULT_SETTINGS } from "./usePractice";
 
 const TOLERANCE = 30;
+
+describe("requiredHoldSec (tempo de sustentação)", () => {
+  const HOLD_SCALE = 0.7;
+  const { minHoldMs } = DEFAULT_SETTINGS;
+
+  it("é uma fração da duração da nota quando a nota é longa o bastante", () => {
+    // Semínima a 100 BPM = 0.6 s; 70% = 0.42 s (acima do piso).
+    expect(requiredHoldSec(0.6, HOLD_SCALE, minHoldMs)).toBeCloseTo(0.42);
+  });
+
+  it("ENCOLHE quando o andamento acelera (nota mais curta pede menos hold)", () => {
+    // Mesma semínima a 100 vs 180 BPM: 0.6 s -> 0.333 s.
+    const slow = requiredHoldSec(0.6, HOLD_SCALE, minHoldMs);
+    const fast = requiredHoldSec(0.333, HOLD_SCALE, minHoldMs);
+    expect(fast).toBeLessThan(slow);
+  });
+
+  it("não cai abaixo do piso absoluto, mas o piso é baixo (não estoura o andamento)", () => {
+    // Nota muito curta: cai no piso, e o piso é pequeno o bastante para não passar
+    // da própria duração da nota num andamento normal.
+    expect(requiredHoldSec(0.05, HOLD_SCALE, minHoldMs)).toBeCloseTo(minHoldMs / 1000);
+    expect(minHoldMs).toBeLessThanOrEqual(200);
+  });
+});
 
 describe("statusForCents", () => {
   it("is good exactly at the tolerance boundary", () => {
