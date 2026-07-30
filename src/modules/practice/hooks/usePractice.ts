@@ -34,7 +34,11 @@ export interface PracticeSettings {
 
 export const DEFAULT_SETTINGS: PracticeSettings = {
   toleranceCents: 30,
-  holdScale: 0.7,
+  // 100%: segura a nota pela figura INTEIRA, então tocar afinado reproduz a
+  // rítmica exata no BPM mostrado - "no ritmo, lindo de ver". O aluno afrouxa no
+  // slider (Sustentação) se quiser avançar antes; quem controla a velocidade é o
+  // BPM.
+  holdScale: 1,
   // ~1 janela de análise (FFT 4096 ≈ 93 ms) mais uma folga: o mínimo detectável,
   // sem estourar o andamento das notas rápidas como os 350 ms antigos faziam.
   minHoldMs: 150,

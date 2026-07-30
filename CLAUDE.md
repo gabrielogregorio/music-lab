@@ -309,6 +309,10 @@ O que está codificado aqui:
 - **Andamento ajustável** (estado `bpm` no `Practice.tsx`): parte do `tempo`
   sugerido da música e reseta ao trocar de faixa (padrão "storing previous
   value", sem efeito). Entra em `displaySong.tempo` → `prepareSong` → durações.
+- **Sustentação padrão 100%** (`holdScale`): segurar a nota certa dura a figura
+  INTEIRA, então tocar afinado reproduz a rítmica exata no BPM mostrado - o modelo
+  "toca junto; errou, espera; certo, segura no ritmo". O slider afrouxa (avançar
+  antes); a velocidade é o BPM, não o `holdScale`.
 
 ### Metrônomo (timing)
 

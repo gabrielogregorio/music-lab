@@ -1,14 +1,20 @@
 # Changelog
 
-## 2.10.1 - Treino: a sustentação volta a encolher com o andamento
+## 2.10.1 - Treino: a sustentação segue o ritmo
 
-No Treino, cada nota precisava ser segurada por ~mais tempo que o "certo" e isso não
-diminuía ao acelerar o andamento. Causa: o piso de sustentação (`minHoldMs`) era de
-**350 ms**, e num andamento rápido a nota já dura menos que isso - então o piso passava a
-mandar e o tempo de sustentação parava de encolher com o BPM (você segurava mais do que a
-própria nota durava). O piso caiu para **150 ms** (~uma janela de análise, o mínimo
-detectável), então `requiredHoldSec = max(150 ms, duração × holdScale)` volta a encolher
-com o andamento. O cálculo virou função pura testada (`requiredHoldSec`).
+Duas coisas no tempo de segurar cada nota:
+
+1. **O piso não estourava mais o andamento.** Era de **350 ms**, e num andamento rápido a
+   nota já dura menos que isso - então o piso passava a mandar e o tempo de segurar parava
+   de encolher com o BPM (você segurava mais do que a própria nota durava). Caiu para
+   **150 ms** (~uma janela de análise, o mínimo detectável), então
+   `requiredHoldSec = max(150 ms, duração × holdScale)` volta a encolher com o andamento.
+   Virou função pura testada (`requiredHoldSec`).
+2. **Sustentação padrão 70% → 100%.** Agora segurar a nota certa dura a figura INTEIRA, e
+   `duração = beats × 60/BPM` - ou seja, tocar afinado reproduz a **rítmica exata no BPM
+   mostrado** (o modelo "toca junto; errou, espera; certo, segura no ritmo"). Antes, com
+   70%, o que soava era ~30% mais rápido que o BPM da tela. O slider Sustentação continua
+   (o aluno afrouxa se quiser avançar antes); a velocidade é o BPM.
 
 ## 2.10.0 - Afinador cromático: ouve o som, não o instrumento
 
