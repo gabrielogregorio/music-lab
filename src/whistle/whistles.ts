@@ -7,6 +7,11 @@ import { midiToName, midiToSolfege } from "../music/pitch";
 // one shared table serves every key; only the all-closed note changes. The
 // chromatic set of keys mirrors the dropdown of the old mandolintab converter.
 
+const SEMITONES_PER_OCTAVE = 12;
+// Início da 3ª oitava (o "vazamento" extremo): a partir daqui a nota só sai em
+// casos extremos, e o diagrama marca isso com o anel duplo.
+const THIRD_OCTAVE_OFFSET = 2 * SEMITONES_PER_OCTAVE;
+
 function makeWhistle(id: string, label: string, tonicMidi: number): Instrument {
   return {
     id,
@@ -14,8 +19,7 @@ function makeWhistle(id: string, label: string, tonicMidi: number): Instrument {
     tonicMidi,
     maxOffset: MAX_OFFSET,
     holeCount: 6,
-    overblowOffset: 12,
-    rangeLabel: "tessitura de duas oitavas",
+    rangeLabel: "tessitura de três oitavas",
     fingeringForOffset,
     layout: WHISTLE_LAYOUT,
   };
@@ -41,6 +45,14 @@ export const WHISTLES: Instrument[] = [
 
 export const DEFAULT_WHISTLE = "D";
 
+// Em qual oitava a nota soa (1 normal, 2 sobressopro, 3 o topo extremo). Os
+// furos são os mesmos; o que muda é o sopro, e o diagrama mostra por anéis.
+function octaveOf(offset: number): 1 | 2 | 3 {
+  if (offset >= THIRD_OCTAVE_OFFSET) return 3;
+  if (offset >= SEMITONES_PER_OCTAVE) return 2;
+  return 1;
+}
+
 export function whistleById(id: string): Instrument {
   return (
     WHISTLES.find((whistle) => whistle.id === id) ??
@@ -55,7 +67,7 @@ export type TabColumn =
       note: ParsedNote;
       offset: number;
       fingering: Fingering;
-      octave: 1 | 2;
+      octave: 1 | 2 | 3;
       name: string; // scientific pitch name, e.g. "E4"
       solfege: string; // "Mi"
     }
@@ -100,10 +112,7 @@ export function buildTab(notes: ParsedNote[], instrument: Instrument): TabResult
       continue;
     }
 
-    const octave: 1 | 2 =
-      instrument.overblowOffset !== undefined && offset >= instrument.overblowOffset ? 2 : 1;
-
-    columns.push({ playable: true, note, offset, fingering, octave, name, solfege });
+    columns.push({ playable: true, note, offset, fingering, octave: octaveOf(offset), name, solfege });
   }
 
   return { columns, rangeWarnings };

@@ -21,6 +21,10 @@ export function TopBar() {
             <span className="flag" aria-hidden="true">
               {language.flag}
             </span>
+            {/* O código sempre visível: as flags emoji (Escócia/País de Gales e as
+                regionais) não renderizam em muitos Android/Windows, e sem texto o
+                seletor sumia no mobile. */}
+            <span className="lang-code">{language.code.toUpperCase()}</span>
           </button>
         ))}
       </div>

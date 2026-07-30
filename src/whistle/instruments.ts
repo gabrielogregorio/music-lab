@@ -23,8 +23,6 @@ export interface Instrument {
   tonicMidi: number;
   maxOffset: number;
   holeCount: number;
-  /** Offset at/above which the note is the over-blown octave. */
-  overblowOffset?: number;
   rangeLabel: string;
   fingeringForOffset(offset: number): Fingering | null;
   layout: HoleLayout;

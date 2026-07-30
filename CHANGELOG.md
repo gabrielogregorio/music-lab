@@ -1,5 +1,52 @@
 # Changelog
 
+## 2.9.1 - Seletor de idiomas visível no mobile
+
+Dois problemas somados faziam o seletor de idiomas "sumir":
+
+1. **Dependia só da flag emoji** - e as flags de Escócia/País de Gales (subdivisão) e as
+   regionais não renderizam em muito Android/Windows, então os botões ficavam em branco.
+   Agora cada botão mostra também o **código em texto** (PT, EN, ES...), sempre legível.
+2. **Ficava espremido no canto direito** do cabeçalho e, com a janela estreita ou o zoom
+   reduzido (viewport CSS maior que a janela), escorregava para fora da vista - sem
+   depender de nenhum breakpoint. Agora o seletor vive **sempre na própria linha, largura
+   total, ancorado à esquerda** e rolável na horizontal: não tem canto direito para
+   cortar, em nenhuma largura ou zoom. Alvo de toque maior em tela estreita.
+
+### A barra de abas do mobile agora fica mesmo embaixo
+
+No celular a nav vira uma tab bar `position: fixed; bottom: 0` - mas ela aparecia colada
+no **topo**, logo abaixo do cabeçalho. Causa: `.site-head` tinha `backdrop-filter: blur()`,
+e filtro/`backdrop-filter` num ancestral cria bloco de contenção para descendentes
+`fixed`, então o `bottom: 0` era o rodapé do HEADER, não o da viewport. No mobile
+(`≤640px`) o `backdrop-filter` foi removido do cabeçalho e a barra volta a fixar no
+rodapé da tela. (Verificado com captura headless a 390px.)
+
+## 2.9.0 - Conversor: aceita "F#", vai à 3ª oitava e escolhe a vista
+
+### "F#" agora funciona (era erro de símbolo)
+
+ABC grafa sustenido com `^` ANTES da nota (`^F`), nunca `F#` - então colar um tune com
+`F#` disparava "não entendi #" (e o `'` de oitava logo depois virava dano colateral,
+lido solto). Agora `normalizeSharps` (em `music/transform.ts`) converte `F#` → `^F` no
+TEXTO, antes do abcjs E do parser, para os dois lerem o mesmo sustenido. Símbolos de
+acorde entre aspas (`"F#m"`), campos de tom (`K:F#`, `[K:F#]`) e cabeçalhos ficam
+intactos - lá o `#` é legítimo. (Dica: em `K:Amaj` nem precisa do sustenido, a armadura
+já deixa Fá/Dó/Sol sustenidos.)
+
+### Vazamento para a 3ª oitava
+
+A tabela de furos do whistle ia até 2 oitavas (`MAX_OFFSET` 24) e marcava com `✕` tudo
+acima. Agora vai a **3 oitavas** (`MAX_OFFSET` 36): o topo extremo, que só sai em alguns
+casos e com sopro forte, mas os dedos são os mesmos. O diagrama distingue as oitavas por
+anéis acima da coluna: nenhum (1ª), um (2ª, sobressopro), **dois empilhados (3ª)**.
+
+### Escolher a vista: partitura / tablatura / ambas
+
+O Conversor ganhou o mesmo seletor do Treino: **partitura** (só a pauta), **tablatura**
+(só a coluna de furos, reusando `renderTabSvg`) ou **ambas** (os diagramas alinhados sob
+cada nota, o padrão de antes). Substitui o antigo checkbox "dedilhado alinhado".
+
 ## 2.8.0 - Referência de teoria no guia e Leitura em tinta cheia
 
 ### Digitações: material de teoria (de → para dos nomes)
@@ -48,6 +95,17 @@ formato 0 - melodia no canal 1, percussão no canal 10 de bateria) e **áudio WA
 embarcar um encoder (lamejs), e WAV já entrega o áudio lossless sem esse peso. O plano
 da música (`export/plan.ts`) e os bytes de MIDI/encoder de WAV são puros e testados; só
 o render em si depende do navegador.
+
+## 2.6.1 - In Taberna Quando Sumus no repertório
+
+Mais uma peça no repertório do Treino (agora 20). A **altura** foi decodificada por
+imagem da tablatura de 6 furos "09 - In Taberna quandu sumus.pdf" com
+`tools/whistle-tab/tabdecode.py` + `fingermap.py` (reproduzível, nenhuma nota digitada
+à mão), escrita à régua de `D4`. O **ritmo NÃO foi inventado**: não há versão de
+referência citada para esta tablatura, então ela entra com `SEM FONTE DE RITMO` (toda
+nota em 1 tempo), declarado no `source` e no `warnings` e visível na ficha - o mesmo
+caminho honesto de This Old Man. Fica pendente de uma fonte de ritmo para levantar as
+durações.
 
 ## 2.6.0 - Teclado, e as músicas viraram ponto global
 

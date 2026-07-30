@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import abcjs from "abcjs";
 import { parseAbc, type WarningCode } from "../../music/abcParser";
-import { adjustDurations, removeSlurs } from "../../music/transform";
+import { adjustDurations, normalizeSharps, removeSlurs } from "../../music/transform";
 import { buildTab, whistleById, WHISTLES, DEFAULT_WHISTLE } from "../../whistle/whistles";
 import { renderTabSvg } from "../../whistle/tabSvg";
 import { injectAlignedFingerings } from "../../ui/alignedTab";
@@ -15,6 +15,12 @@ const WARN_KEY: Record<WarningCode, string> = {
 };
 
 type Msg = { kind: "warn" | "info"; text: string };
+
+// Como mostrar o resultado: só partitura, só tablatura de furos, ou as duas -
+// igual aos modos do Treino. "both" injeta os diagramas alinhados sob as notas;
+// "tab" desenha a tablatura sozinha (reusa `renderTabSvg`); "staff" é só a pauta.
+type ViewMode = "staff" | "tab" | "both";
+const VIEW_MODES: ViewMode[] = ["staff", "tab", "both"];
 
 const SEMITONES_PER_OCTAVE = 12;
 // Espaço extra (px) aberto sob cada linha para a tablatura caber; soma à altura
@@ -67,7 +73,7 @@ export function Converter() {
   const [tempo, setTempo] = useState(0);
   const [removeLegato, setRemoveLegato] = useState(false);
   const [paper, setPaper] = useState<PaperSize>("a4");
-  const [showTab, setShowTab] = useState(true);
+  const [view, setView] = useState<ViewMode>("both");
   // alignMismatch e exportError vêm de operações imperativas (render do abcjs,
   // download) - não são deriváveis na renderização, então continuam em estado.
   const [alignMismatch, setAlignMismatch] = useState(false);
@@ -82,7 +88,8 @@ export function Converter() {
   // transforms de "acalmar a música" rodam aqui, antes de qualquer leitura, pra
   // partitura e dedilhado ficarem em sincronia.
   const derived = useMemo(() => {
-    let processed = abc;
+    // "F#" -> "^F" primeiro, para o abcjs e o parser lerem o mesmo sustenido.
+    let processed = normalizeSharps(abc);
     if (removeLegato) processed = removeSlurs(processed);
     processed = adjustDurations(processed, tempo);
 
@@ -138,38 +145,48 @@ export function Converter() {
     setExportError(null);
     let mismatch = false;
 
+    // Tablatura sozinha (sem pauta) - a mesma que serve de fallback quando o
+    // abcjs não desenha; aqui vira a saída principal do modo "tab".
+    const renderStandaloneTab = () => {
+      if (columns.length === 0) return;
+      const columnsPerRow = Math.max(
+        MIN_TAB_COLUMNS,
+        Math.floor(FALLBACK_TAB_WIDTH_PX / instrument.layout.width),
+      );
+      const rendered = renderTabSvg(columns, { columnsPerRow, layout: instrument.layout });
+      tabElement.innerHTML = rendered.svg;
+      tabElement.hidden = false;
+      tabSizeRef.current = { width: rendered.width, height: rendered.height };
+    };
+
     if (processed.trim()) {
-      const staffsep = instrument.layout.height + STAFFSEP_EXTRA_PX;
-      const source = showTab ? `%%staffsep ${staffsep}\n${processed}` : processed;
-      try {
-        abcjs.renderAbc(notationElement, source, {
-          visualTranspose: transpose,
-          add_classes: true,
-          staffwidth: STAFF_WIDTH_PX,
-          paddingtop: STAFF_PADDING_PX,
-          paddingbottom: STAFF_PADDING_PX,
-        });
-        const svg = notationElement.querySelector("svg");
-        if (svg && showTab && columns.length > 0) {
-          const result = injectAlignedFingerings(svg, columns, instrument.layout);
-          mismatch = result.placed < result.total;
-        }
-      } catch {
-        notationElement.innerHTML = `<p class="render-error">${escapeHtml(translate("msg.renderError"))}</p>`;
-        if (showTab && columns.length > 0) {
-          const columnsPerRow = Math.max(
-            MIN_TAB_COLUMNS,
-            Math.floor(FALLBACK_TAB_WIDTH_PX / instrument.layout.width),
-          );
-          const rendered = renderTabSvg(columns, { columnsPerRow, layout: instrument.layout });
-          tabElement.innerHTML = rendered.svg;
-          tabElement.hidden = false;
-          tabSizeRef.current = { width: rendered.width, height: rendered.height };
+      if (view === "tab") {
+        renderStandaloneTab();
+      } else {
+        const withFingerings = view === "both";
+        const staffsep = instrument.layout.height + STAFFSEP_EXTRA_PX;
+        const source = withFingerings ? `%%staffsep ${staffsep}\n${processed}` : processed;
+        try {
+          abcjs.renderAbc(notationElement, source, {
+            visualTranspose: transpose,
+            add_classes: true,
+            staffwidth: STAFF_WIDTH_PX,
+            paddingtop: STAFF_PADDING_PX,
+            paddingbottom: STAFF_PADDING_PX,
+          });
+          const svg = notationElement.querySelector("svg");
+          if (svg && withFingerings && columns.length > 0) {
+            const result = injectAlignedFingerings(svg, columns, instrument.layout);
+            mismatch = result.placed < result.total;
+          }
+        } catch {
+          notationElement.innerHTML = `<p class="render-error">${escapeHtml(translate("msg.renderError"))}</p>`;
+          if (withFingerings) renderStandaloneTab();
         }
       }
     }
     setAlignMismatch(mismatch);
-  }, [processed, instrument, columns, showTab, transpose, translate]);
+  }, [processed, instrument, columns, view, transpose, translate]);
 
   const messages: Msg[] = [
     ...baseMessages,
@@ -269,11 +286,24 @@ export function Converter() {
             </label>
           </div>
 
+          <div className="field">
+            <span className="field-label">{translate("practice.view")}</span>
+            <div className="view-seg" role="group" aria-label={translate("practice.view")}>
+              {VIEW_MODES.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`view-seg-btn${view === mode ? " active" : ""}`}
+                  onClick={() => setView(mode)}
+                  aria-pressed={view === mode}
+                >
+                  {translate(`practice.view.${mode}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="field toggles">
-            <label className="check">
-              <input type="checkbox" checked={showTab} onChange={(event) => setShowTab(event.target.checked)} />
-              <span>{translate("toggle.tab")}</span>
-            </label>
             <label className="check">
               <input
                 type="checkbox"
@@ -331,6 +361,7 @@ export function Converter() {
               <strong>◑</strong> <span>{translate("legend.half")}</span>
             </li>
             <li>{translate("legend.octave")}</li>
+            <li>{translate("legend.octave3")}</li>
             <li>
               <span className="star">*</span> <span>{translate("legend.star")}</span>
             </li>

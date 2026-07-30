@@ -27,7 +27,11 @@ describe("fingeringForOffset", () => {
     expect(fingeringForOffset(12)?.holes).toEqual(fingeringForOffset(0)?.holes);
   });
 
-  it("still resolves the top of the two-octave range", () => {
+  it("repeats the same shape a third octave up (offset 24 == offset 0)", () => {
+    expect(fingeringForOffset(24)?.holes).toEqual(fingeringForOffset(0)?.holes);
+  });
+
+  it("still resolves the top of the three-octave range", () => {
     expect(fingeringForOffset(MAX_OFFSET)?.holes).toEqual([1, 1, 1, 1, 1, 1]);
   });
 
@@ -39,7 +43,7 @@ describe("fingeringForOffset", () => {
     expect(fingeringForOffset(MAX_OFFSET + 1)).toBeNull();
   });
 
-  it("exposes a two-octave chromatic ceiling", () => {
-    expect(MAX_OFFSET).toBe(24);
+  it("exposes a three-octave chromatic ceiling", () => {
+    expect(MAX_OFFSET).toBe(36);
   });
 });

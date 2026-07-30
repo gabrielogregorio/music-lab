@@ -1,9 +1,41 @@
 import { describe, it, expect } from "vitest";
-import { adjustDurations, removeSlurs } from "../src/music/transform";
+import { adjustDurations, removeSlurs, normalizeSharps } from "../src/music/transform";
 import { parseAbc } from "../src/music/abcParser";
 import { DROWSY_MAGGIE_2 } from "./fixtures";
 
 const HEAD = "X:1\nL:1/8\nK:D\n";
+
+describe("normalizeSharps", () => {
+  it("converte 'F#' (sustenido de iniciante) para o '^F' do ABC", () => {
+    expect(normalizeSharps(HEAD + "F# G")).toBe(HEAD + "^F G");
+  });
+
+  it("preserva a marca de oitava depois do sustenido: F#' -> ^F'", () => {
+    expect(normalizeSharps(HEAD + "F#'")).toBe(HEAD + "^F'");
+  });
+
+  it("não mexe no '#' de cabeçalho de tom (K:F#)", () => {
+    expect(normalizeSharps("X:1\nK:F#\nA B")).toBe("X:1\nK:F#\nA B");
+  });
+
+  it("não mexe no '#' de acorde cifrado entre aspas", () => {
+    expect(normalizeSharps(HEAD + '"F#m" A B')).toBe(HEAD + '"F#m" A B');
+  });
+
+  it("não toca no texto sem '#' (atalho rápido)", () => {
+    const clean = HEAD + "A B c d";
+    expect(normalizeSharps(clean)).toBe(clean);
+  });
+
+  it("depois de normalizar, o parser lê a nota como sustenido de verdade", () => {
+    // K:C não tem Fá# na armadura, então "F" cru é Fá natural e "^F" é Fá#.
+    const naturalHead = "X:1\nL:1/8\nK:C\n";
+    const before = parseAbc(naturalHead + "F").notes[0];
+    const after = parseAbc(normalizeSharps(naturalHead + "F#")).notes[0];
+    expect(before.midi + 1).toBe(after.midi); // Fá natural -> Fá#, um semitom acima
+    expect(parseAbc(normalizeSharps(naturalHead + "F#")).warnings).toHaveLength(0);
+  });
+});
 
 describe("adjustDurations", () => {
   it("turns an eighth (one unit) into a quarter at +1", () => {

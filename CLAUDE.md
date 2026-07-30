@@ -84,8 +84,8 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/app/registry.ts` | Catálogo dos apps (ícone, chaves de nome/descrição/keywords) - usado por nav e launcher. |
 | `src/app/detect.ts` | Heurísticas puras do launcher: `looksLikeAbc`, `detectTempo`, `scoreMatch` (testado). |
 | `src/app/theme.ts` | `lockLightTheme()` - fixa `data-theme="light"` no `<html>`. O app é **travado no tema claro**; não há toggle. |
-| `src/shell/` | `TopBar` (só os idiomas), `Nav`, `Launcher` (a home) e `WhistleMark` (a marca SVG). |
-| `src/modules/converter/Converter.tsx` | UI React sobre os cores de `music/`, `whistle/`, `ui/`. |
+| `src/shell/` | `TopBar` (seletor de idiomas: flag **+ código** de texto, PT/EN/... - a flag emoji some em muito Android/Windows, o código garante que o seletor apareça no mobile), `Nav`, `Launcher` (a home) e `WhistleMark` (a marca SVG). |
+| `src/modules/converter/Converter.tsx` | UI React sobre os cores de `music/`, `whistle/`, `ui/`. Seletor de vista partitura/tablatura/ambas (`ViewMode`, mesmo espírito do Treino): "tab" reusa `renderTabSvg`, "both" injeta os diagramas alinhados. |
 | `src/modules/tuner/` | Afinador. `core/` puro e testado (yin, cents, stability, vibrato, trace, presets); `audio/` (worklet coletor + worker YIN + engine); `hooks/`, `components/`. |
 | `src/modules/metronome/` | `Metronome.tsx` (UI + loop rAF) + `core/` (timing/áudio puro, testado). |
 | `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `hooks/`, `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
@@ -99,7 +99,7 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `tools/partituras-import/` | Traz as partituras canônicas do projeto "tabs in C tin whistle" (fora do repo) para `music/scores/*.ts` + `repertoire.ts`. Ver o README de lá. Roda fora do build. |
 | `tools/whistle-tab/` | Pipeline Python que decodifica as tablaturas da apostila (PDF). **Aposentado como fonte do repertório** (gerava o antigo `tunes.ts` em ABC, com ritmo por heurística); o decodificador de furos segue valendo. |
 | `src/music/` | ABC → alturas e armadura (do conversor, testado). `abcParser.ts` lê só alturas (casadas com o abcjs); `abcEvents.ts` lê o fluxo **rítmico** (durações, pausas, repetições abertas) - sobrou sem consumidor quando o Treino trocou ABC por partitura, mas é o caminho pronto para importar tune de sessão. `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
-| `src/whistle/` | Tabela cromática de digitação, mapeamento e render SVG (testado). |
+| `src/whistle/` | Tabela cromática de digitação, mapeamento e render SVG (testado). `MAX_OFFSET = 36` (3 oitavas: a 3ª é o topo extremo, marcado com anel duplo); `octaveOf` classifica 1/2/3. |
 | `src/ui/alignedTab.ts`, `src/ui/export.ts` | Injeção alinhada dos diagramas + export SVG/PNG/PDF. |
 | `src/styles/global.css` | Tema tin whistle (verde Feadóg + latão), mobile-first. |
 
@@ -168,7 +168,11 @@ transforme só um dos dois lados.
   (`A/2` +1 → `A3/2`); o acorde estica como bloco (`[CEG]` → `[CEG]2`), não nota a
   nota; delta negativo tem piso de meia unidade para nunca zerar uma nota.
 - `removeSlurs(abc)` tira slurs `( )` e ties `-`, mas **preserva quiálteras** (`(3`).
-- Ambos copiam verbatim: cabeçalhos, campos em linha (`[K:G]`, `w:`), comentários,
+- `normalizeSharps(abc)` conserta o erro clássico de colar `F#` (que NÃO é ABC - o
+  sustenido é `^F`): converte `nota#` → `^nota` para o abcjs e o parser lerem o mesmo.
+  **Não toca** no `#` de acorde cifrado (`"F#m"`), campo em linha (`[K:F#]`) nem
+  cabeçalho (`K:F#`) - lá o `#` é legítimo. Roda primeiro no pipeline do Conversor.
+- Todos copiam verbatim: cabeçalhos, campos em linha (`[K:G]`, `w:`), comentários,
   acordes cifrados (`"Am"`), decorações (`!trill!`) e grace notes (`{}`).
 
 ### Transpose: o "bug" que não é bug

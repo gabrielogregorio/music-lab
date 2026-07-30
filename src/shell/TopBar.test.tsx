@@ -18,6 +18,19 @@ describe("TopBar", () => {
     expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
   });
 
+  it("shows a text code per language so the selector is legible without flag emoji", () => {
+    // As flags emoji (Escócia/País de Gales, regionais) somem em muito Android/
+    // Windows; o código em texto garante que o seletor apareça no mobile.
+    render(
+      <I18nProvider>
+        <TopBar />
+      </I18nProvider>,
+    );
+    expect(screen.getByText("PT")).toBeInTheDocument();
+    expect(screen.getByText("EN")).toBeInTheDocument();
+    expect(screen.getByText("GD")).toBeInTheDocument();
+  });
+
   it("switches the active language on click and persists the choice", async () => {
     const user = userEvent.setup();
     render(

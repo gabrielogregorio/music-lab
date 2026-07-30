@@ -20,11 +20,11 @@ Conversor ABC → digitação · Afinador · Metrônomo · Treino de afinação 
 | Rota | Ferramenta | O que faz |
 |---|---|---|
 | `#/` | **🔎 Launcher** | A home é um input inteligente: cole notação ABC e ele abre o **Conversor**; escreva "120 bpm" e ele abre o **Metrônomo**; ou busque uma ferramenta por palavra-chave. |
-| `#/converter` | **🎼 Conversor ABC** | Cole um tune em [ABC](https://abcnotation.com/) e receba a partitura com a **digitação de tin whistle alinhada sob cada nota**. Transponha, **alongue as notas** para acalmar um tune agitado, remova ligados e exporte em SVG, PNG ou PDF. |
+| `#/converter` | **🎼 Conversor ABC** | Cole um tune em [ABC](https://abcnotation.com/) e receba a partitura com a **digitação de tin whistle alinhada sob cada nota**. Escolha a vista (partitura / tablatura / ambas), transponha, **alongue as notas** para acalmar um tune agitado, remova ligados e exporte em SVG, PNG ou PDF. Aceita o `F#` de iniciante (converte para o `^F` do ABC) e vai até a 3ª oitava. |
 | `#/tuner` | **🎯 Afinador** | Afina pelo **centro** da nota, não pelo instante. Mostra a fita de história em cents (vibrato vira onda, deriva de sopro vira rampa), **mede o vibrato** (centro, largura e taxa) e traz a oitava na tela. Presets por instrumento, lá calibrável de 415 a 466 Hz. |
 | `#/metronome` | **🕰️ Metrônomo** | Pêndulo dançante, tap tempo, subdivisões, swing e acento por batida. Timing *sample-accurate* via Web Audio. |
 | `#/practice` | **🎤 Treino** | Toque no microfone e avance nota a nota **só quando acertar a afinação** (detecção de pitch NSDF, tolerância em cents, pauta em SVG). Repertório de 20 melodias em **partitura** - altura decodificada da tablatura de furos, ritmo vindo de fonte citada; escolher a whistle transpõe a peça inteira. Modos Treino (mic) e Leitura (peça inteira). |
-| `#/guide` | **🖐️ Digitações** | Carta visual de como cada nota é digitada na tin whistle, fife e recorder. |
+| `#/guide` | **🖐️ Digitações** | Carta visual de como cada nota é digitada na tin whistle, fife e recorder. Traz também uma **referência de teoria**: o de → para de solfejo ↔ letra (A-G) ↔ notação ABC, mais resumos de escala, cromático, como ler a partitura e a notação ABC irlandesa. |
 | `#/songmaker` | **🎛️ Song Maker** | Grade sequenciadora (melodia + percussão) no espírito do Chrome Music Lab; áudio Web Audio, sem samples. **16 vozes** e 3 linhas de percussão; exporta JSON, **MIDI** e **WAV** direto no navegador. |
 | `#/keyboard` | **🎹 Teclado** | Piano na tela que toca a **mesma biblioteca do Treino**. Ajuste a quantidade de teclas e o som, e veja as **notas caindo** (estilo Synthesia) no tempo da música. |
 
@@ -105,7 +105,7 @@ src/
     metronome/            Metronome.tsx (UI + rAF) + core/ (timing/áudio puro)         [testado]
     practice/             Treino: audio/ (pitch NSDF), music/ (partitura + repertório),
                           hooks/, components/                                       [testado]
-    guide/                Digitações: carta visual por instrumento                  [testado]
+    guide/                Digitações: carta visual + referência de teoria (theory.ts) [testado]
     songmaker/            Song Maker: grade + síntese + export MIDI/WAV (export/)   [testado]
     keyboard/             Teclado: music/ (teclas, timeline, notas caindo) +
                           audio/engine.ts + Piano/FallingNotes                      [testado]

@@ -94,12 +94,9 @@ function column(tabColumn: TabColumn, x: number, y: number, layout: HoleLayout):
     );
   });
 
-  // Upper-octave marker (whistles): a small ring above the diagram, blow harder.
-  if (tabColumn.octave === 2) {
-    parts.push(
-      `<circle cx="${cx}" cy="${y + HOLES_TOP - OCTAVE_RING_RISE_LABELED_PX}" r="${OCTAVE_RING_RADIUS_PX}" fill="none" stroke="currentColor" stroke-width="${HOLE_STROKE_PX}"/>`,
-    );
-  }
+  // Marcador de oitava: um anel (2ª, sobressopro) ou dois anéis (3ª, o topo
+  // extremo) acima do diagrama - sopre mais forte.
+  parts.push(...octaveRings(tabColumn.octave, cx, y + HOLES_TOP - OCTAVE_RING_RISE_LABELED_PX, "currentColor"));
   if (tabColumn.fingering.awkward) {
     parts.push(
       `<text x="${cx + layout.width / 2 - AWKWARD_MARK_INSET_LABELED_PX}" y="${y + AWKWARD_MARK_TOP_LABELED_PX}" text-anchor="middle" font-size="${AWKWARD_FONT_PX}" fill="${BRASS}">*</text>`,
@@ -136,17 +133,27 @@ export function fingeringGroupSvg(
       hole(left + holeSpec.x, topY + holeSpec.y, holeSpec.r, tabColumn.fingering.holes[holeIndex], color),
     );
   });
-  if (tabColumn.octave === 2) {
-    parts.push(
-      `<circle cx="${cx}" cy="${topY - OCTAVE_RING_RISE_ALIGNED_PX}" r="${OCTAVE_RING_RADIUS_PX}" fill="none" stroke="${color}" stroke-width="${HOLE_STROKE_PX}"/>`,
-    );
-  }
+  parts.push(...octaveRings(tabColumn.octave, cx, topY - OCTAVE_RING_RISE_ALIGNED_PX, color));
   if (tabColumn.fingering.awkward) {
     parts.push(
       `<text x="${cx + layout.width / 2 - AWKWARD_MARK_INSET_ALIGNED_PX}" y="${topY - AWKWARD_MARK_RISE_ALIGNED_PX}" text-anchor="middle" font-size="${AWKWARD_FONT_PX}" fill="${BRASS}">*</text>`,
     );
   }
   return `<g>${parts.join("")}</g>`;
+}
+
+// Anéis de oitava acima do diagrama: nenhum na 1ª, um na 2ª (sobressopro), dois
+// empilhados na 3ª (o topo extremo). Devolve os círculos SVG já posicionados.
+const OCTAVE_RING_STACK_GAP_PX = 5;
+function octaveRings(octave: 1 | 2 | 3, cx: number, cy: number, color: string): string[] {
+  const rings: string[] = [];
+  for (let ringIndex = 0; ringIndex < octave - 1; ringIndex += 1) {
+    const ringCy = cy - ringIndex * OCTAVE_RING_STACK_GAP_PX;
+    rings.push(
+      `<circle cx="${cx}" cy="${ringCy}" r="${OCTAVE_RING_RADIUS_PX}" fill="none" stroke="${color}" stroke-width="${HOLE_STROKE_PX}"/>`,
+    );
+  }
+  return rings;
 }
 
 export interface TabSvg {

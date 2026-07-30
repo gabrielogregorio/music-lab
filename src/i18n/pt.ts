@@ -50,6 +50,7 @@ export const pt: Dict = {
   "legend.open": "furo aberto",
   "legend.half": "meio-furo (para acidentes como Fá natural)",
   "legend.octave": "anel acima da coluna = oitava de cima (sopre mais forte)",
+  "legend.octave3": "anel duplo acima da coluna = terceira oitava (topo extremo, só sai em algumas notas)",
   "legend.star": "digitação de acidente (meio-furo ou cross-fingering - pode variar entre instrumentos)",
   "legend.xmark": "coluna com ✕ = nota fora do alcance do instrumento escolhido",
   "whistle.mostCommon": " - o mais comum",

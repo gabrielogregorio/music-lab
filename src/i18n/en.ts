@@ -47,6 +47,7 @@ export const en: Dict = {
   "legend.open": "open hole",
   "legend.half": "half-hole (for accidentals like F natural)",
   "legend.octave": "ring above the column = upper octave (blow harder)",
+  "legend.octave3": "double ring above the column = third octave (extreme top, only reachable on some notes)",
   "legend.star": "accidental fingering (half-hole or cross-fingering - may vary between instruments)",
   "legend.xmark": "column with ✕ = note out of the chosen instrument's range",
   "whistle.mostCommon": " - the most common",

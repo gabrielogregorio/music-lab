@@ -36,12 +36,14 @@ const OCTAVE: Fingering[] = [
   F([0, 0, 0, 0, 0, 0]), // 11  major 7th     (C#)
 ];
 
-// Two chromatic octaves: offsets 0..24 (the top note repeats the tonic shape).
-export const MAX_OFFSET = 24;
+// Three chromatic octaves: offsets 0..36. The 2nd octave overblows (blow harder)
+// and the 3rd is the extreme top - only reachable on some notes, by advanced
+// players, but the fingering pattern still just repeats the 1st octave's shapes.
+export const MAX_OFFSET = 36;
 
-// offset -> fingering, for offsets 0..MAX_OFFSET. The upper octave repeats the
-// lower fingerings; the very top note (two octaves up) is commonly voiced by
-// cracking the top hole but keeps the all-closed shape, same as the tonic.
+// offset -> fingering, for offsets 0..MAX_OFFSET. Each octave repeats the lower
+// fingerings; the higher octaves are voiced by blowing harder / cracking the top
+// hole but keep the same hole pattern as the 1st octave.
 export function buildFingeringTable(): Fingering[] {
   const table: Fingering[] = [];
   for (let offset = 0; offset <= MAX_OFFSET; offset += 1) {

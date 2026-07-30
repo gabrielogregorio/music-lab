@@ -96,6 +96,66 @@ function mapBody(abc: string, transformLine: (line: string) => string): string {
   return out.join("\n");
 }
 
+// ABC grafa sustenido com "^" ANTES da nota (^F), nunca "F#". Muita gente cola de
+// ouvido/de outra fonte escrevendo "F#" - que não é ABC e o abcjs também não
+// entende. Aqui a gente normaliza "F#" -> "^F" no TEXTO, antes do abcjs e do
+// parser, para os dois verem o mesmo (nunca só um lado). Símbolos de acorde entre
+// aspas ("F#m"), campos em linha ([K:F#]) e cabeçalhos (K:F#) ficam intactos - lá
+// o "#" é legítimo.
+const NOTE_LETTER_RE = /[A-Ga-g]/;
+
+export function normalizeSharps(abc: string): string {
+  if (!abc.includes("#")) return abc;
+  return mapBody(abc, normalizeSharpsLine);
+}
+
+function normalizeSharpsLine(line: string): string {
+  if (FIELD_RE.test(line) || line.startsWith("%")) return line;
+
+  let out = "";
+  let index = 0;
+  const length = line.length;
+
+  while (index < length) {
+    const char = line[index];
+
+    if (char === "%") {
+      out += line.slice(index);
+      break;
+    }
+    // Acordes cifrados / anotações, decorações e grace notes: verbatim (o "#" de
+    // "F#m" é nome de acorde, não sustenido de nota).
+    if (char === '"' || char === "!" || char === "+" || char === "{") {
+      const closeChar = char === "{" ? "}" : char;
+      const closeIndex = line.indexOf(closeChar, index + 1);
+      const end = closeIndex === -1 ? length : closeIndex + 1;
+      out += line.slice(index, end);
+      index = end;
+      continue;
+    }
+    // Campo em linha [K:F#] / [M:3/4]: verbatim. Acorde [CEG] não casa aqui e
+    // segue sendo processado nota a nota (um "#" ali também vira "^").
+    if (char === "[") {
+      const field = line.slice(index).match(INLINE_FIELD_RE);
+      if (field) {
+        out += field[0];
+        index += field[0].length;
+        continue;
+      }
+    }
+    // Nota seguida direto de "#": o sustenido de iniciante. Vira "^" antes da nota.
+    if (NOTE_LETTER_RE.test(char) && line[index + 1] === "#") {
+      out += `^${char}`;
+      index += 2;
+      continue;
+    }
+
+    out += char;
+    index += 1;
+  }
+  return out;
+}
+
 export function adjustDurations(abc: string, delta: number): string {
   if (!delta) return abc;
   return mapBody(abc, (line) => adjustDurationsLine(line, delta));
