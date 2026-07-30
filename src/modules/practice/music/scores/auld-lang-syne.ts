@@ -11,6 +11,7 @@ export const AULD_LANG_SYNE: ScoreJSON = {
   title: 'Auld Lang Syne',
   composer: 'tradicional escocesa; letra de Robert Burns (1788)',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 1,
   key: { tonic: 'G', mode: 'major' },

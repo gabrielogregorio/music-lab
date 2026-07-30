@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 import type { PreparedNote } from '../music/song';
 import type { NoteStatus } from '../hooks/usePractice';
-import { buildSystems, measureBeatsOf } from '../music/layout';
+import { buildSystems, measureBeatsOf, type System } from '../music/layout';
 import type { ScoreView } from '../music/scoreView';
 import { ScoreBook } from './ScoreBook';
 import { StaffSystem } from './StaffSystem';
@@ -28,6 +28,12 @@ interface ScoreProps {
   tempo?: number;
   timeSignature?: [number, number];
   pickupBeats?: number;
+  /**
+   * Mostra a peça inteira de uma vez, sem paginação. A folha do Treino vira a
+   * página seguindo a nota atual - no modo leitura não existe nota atual, então
+   * paginar só esconderia música.
+   */
+  expanded?: boolean;
 }
 
 export function Score({
@@ -42,6 +48,7 @@ export function Score({
   tempo,
   timeSignature,
   pickupBeats = 0,
+  expanded = false,
 }: ScoreProps) {
   const measureBeats = measureBeatsOf(timeSignature);
   const { systems, sysOfNote, posOfNote } = useMemo(
@@ -53,26 +60,44 @@ export function Score({
   const showTab = view === 'tab' || view === 'both';
   const shared = { currentIndex, status, direction, holdProgress, tempo, timeSignature };
 
+  const renderSystem = (system: System, index: number) => (
+    <>
+      {showStaff && <StaffSystem system={system} index={index} {...shared} />}
+      {showTab && (
+        <TabSystem
+          system={system}
+          index={index}
+          whistleKey={whistleKey}
+          octaveAgnostic={octaveAgnostic}
+          {...shared}
+        />
+      )}
+    </>
+  );
+
+  if (expanded) {
+    return (
+      <div className="staff-frame">
+        <div className="staff-page">
+          {/* Lista posicional derivada da música: o índice do sistema é a única
+              identidade que ele tem, e é estável enquanto a música é a mesma. */}
+          {systems.map((system, index) => (
+            <div key={index} className="score-line">
+              {renderSystem(system, index)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ScoreBook
       systems={systems}
       sysOfNote={sysOfNote}
       posOfNote={posOfNote}
       currentIndex={currentIndex}
-      renderSystem={(system, index) => (
-        <>
-          {showStaff && <StaffSystem system={system} index={index} {...shared} />}
-          {showTab && (
-            <TabSystem
-              system={system}
-              index={index}
-              whistleKey={whistleKey}
-              octaveAgnostic={octaveAgnostic}
-              {...shared}
-            />
-          )}
-        </>
-      )}
+      renderSystem={renderSystem}
     />
   );
 }

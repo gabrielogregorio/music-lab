@@ -9,6 +9,7 @@ import { Tuner } from "./modules/tuner/Tuner";
 import { Metronome } from "./modules/metronome/Metronome";
 import { Practice } from "./modules/practice/Practice";
 import { SongMaker } from "./modules/songmaker/SongMaker";
+import { Keyboard } from "./modules/keyboard/Keyboard";
 import { WhistleMark } from "./shell/WhistleMark";
 
 export function App() {
@@ -39,6 +40,7 @@ export function App() {
         {route === "metronome" && <Metronome />}
         {route === "practice" && <Practice />}
         {route === "songmaker" && <SongMaker />}
+        {route === "keyboard" && <Keyboard />}
       </main>
 
       <footer className="site-foot">

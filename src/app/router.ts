@@ -11,7 +11,8 @@ export type RouteName =
   | "tuner"
   | "metronome"
   | "practice"
-  | "songmaker";
+  | "songmaker"
+  | "keyboard";
 
 const PATHS: Record<string, RouteName> = {
   "": "home",
@@ -22,6 +23,7 @@ const PATHS: Record<string, RouteName> = {
   "/metronome": "metronome",
   "/practice": "practice",
   "/songmaker": "songmaker",
+  "/keyboard": "keyboard",
 };
 
 const ROUTE_TO_HASH: Record<RouteName, string> = {
@@ -32,6 +34,7 @@ const ROUTE_TO_HASH: Record<RouteName, string> = {
   metronome: "#/metronome",
   practice: "#/practice",
   songmaker: "#/songmaker",
+  keyboard: "#/keyboard",
 };
 
 function parseHash(): RouteName {

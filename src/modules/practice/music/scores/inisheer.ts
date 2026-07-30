@@ -11,6 +11,7 @@ export const INISHEER: ScoreJSON = {
   title: 'Inisheer',
   composer: 'Tommy Walsh',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [3, 4],
   pickupBeats: 1,
   key: { tonic: 'G', mode: 'major' },

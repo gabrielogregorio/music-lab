@@ -10,6 +10,7 @@ export const DAWNING: ScoreJSON = {
   id: 'dawning',
   title: 'The Dawning of the Day',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 1,
   key: { tonic: 'D', mode: 'major' },

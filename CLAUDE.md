@@ -27,7 +27,10 @@ afinador próprio.
 | `#/converter` | **Conversor ABC** | ABC → partitura (abcjs) com a digitação de tin whistle alinhada sob cada nota; transpose, alongar notas, remover ligados; export SVG/PNG/PDF. |
 | `#/tuner` | **Afinador** | YIN em AudioWorklet+Worker; fita de história em cents, vibrato medido (centro/extensão/taxa), presets por instrumento, calibração do lá. Julga pelo **centro**, não pelo instante. |
 | `#/metronome` | **Metrônomo** | Pêndulo SVG, tap tempo, subdivisões, swing, acento por batida; timing sample-accurate via Web Audio. |
-| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents). Lê por **partitura**, por **tablatura de 6 furos** ou pelas duas; escolher a whistle transpõe o repertório (que mora em partitura JSON). |
+| `#/practice` | **Treino** | Toca no microfone e avança nota a nota ao acertar a afinação (detecção NSDF, tolerância em cents). Lê por **partitura**, por **tablatura de 6 furos** ou pelas duas; escolher a whistle transpõe o repertório (que mora em partitura JSON). Dois modos: Treino (mic) e Leitura (peça inteira, sem mic). |
+| `#/guide` | **Digitações** | Carta visual: como cada nota é digitada na tin whistle, fife e recorder. |
+| `#/songmaker` | **Song Maker** | Grade sequenciadora (melodia + percussão) no espírito do Chrome Music Lab; áudio Web Audio, sem samples. |
+| `#/keyboard` | **Teclado** | Piano na tela que toca a MESMA biblioteca do Treino (o ponto global `src/songs`). Quantidade de teclas ajustável, som escolhível (as vozes do Song Maker) e modo **notas caindo** (Synthesia, autoplay). |
 
 ## Stack
 
@@ -88,6 +91,10 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `hooks/`, `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
 | `src/modules/practice/music/` | Núcleo puro: `score.ts` (o formato de PARTITURA) + `scores/*.ts` e `repertoire.ts` (repertório **gerado** por `tools/partituras-import/`) → `scoreToSong.ts` → `song.ts`; `fingerings.ts` (tabela de furos + tessitura real), `whistleTuning.ts` (transposição por afinação), `octave.ts` (oitava de leitura), `layout.ts` (compassos, sistemas e `placeSystem`), `scoreView.ts`, `notes.ts`, `tempo.ts`. |
 | `src/modules/practice/components/` | `Score` escolhe o modo → `ScoreBook` pagina → `StaffSystem` (com `rhythmFigure`) e/ou `TabSystem` desenham a mesma linha. Mais `PitchMeter`, `WhistleDiagram`, `SongEditor`, `HistoryPanel`. |
+| `src/songs/` | **Ponto global das músicas** (agnóstico). `library.ts` (`useSongLibrary`) compõe exercícios + repertório de whistle + músicas do usuário numa lista de seções; `localStore.ts` (`loadJson`/`saveJson`). Treino E Teclado leem daqui - o `SongJSON`/`prepareSong` e o repertório continuam em `practice/music` (núcleo gerado) e a library importa de lá. |
+| `src/modules/guide/` | Digitações: `Guide.tsx`, `instruments.ts` (tabela por instrumento, testado), `HoleDiagram`/`HoldGuide`. |
+| `src/modules/songmaker/` | Song Maker: `music/` (grade/escala puras) + `audio/` (`synth.ts` = 6 vozes melódicas + percussão; `engine.ts` = scheduler de lookahead) + `SongMaker.tsx`. |
+| `src/modules/keyboard/` | Teclado: `music/` puro (`keys.ts` teclas+geometria, `playback.ts` linha do tempo, `falling.ts` posições da chuva de notas) + `audio/engine.ts` (scheduler que reusa `playMelodyNote` do Song Maker; testado com AudioContext falso) + `components/` (`Piano`, `FallingNotes`) + `Keyboard.tsx`. |
 | `tools/partituras-import/` | Traz as partituras canônicas do projeto "tabs in C tin whistle" (fora do repo) para `music/scores/*.ts` + `repertoire.ts`. Ver o README de lá. Roda fora do build. |
 | `tools/whistle-tab/` | Pipeline Python que decodifica as tablaturas da apostila (PDF). **Aposentado como fonte do repertório** (gerava o antigo `tunes.ts` em ABC, com ritmo por heurística); o decodificador de furos segue valendo. |
 | `src/music/` | ABC → alturas e armadura (do conversor, testado). `abcParser.ts` lê só alturas (casadas com o abcjs); `abcEvents.ts` lê o fluxo **rítmico** (durações, pausas, repetições abertas) - sobrou sem consumidor quando o Treino trocou ABC por partitura, mas é o caminho pronto para importar tune de sessão. `transform.ts` faz os transforms de texto do ABC: `adjustDurations` (alongar/encurtar notas) e `removeSlurs` (tirar ligados). |
@@ -111,7 +118,9 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 - Preferências em `localStorage`: `music-lab:lang` e `music-lab:tuner` (instrumento,
   afinação do whistle, lá de referência, tolerância e sistema de nomes das notas).
   (Não há mais `music-lab:theme` - o tema é sempre claro.) O metrônomo e o treino
-  mantêm seus próprios namespaces de storage.
+  mantêm seus próprios namespaces de storage. As músicas do usuário vivem em
+  `perfect-partituras.songs` (lido pelo ponto global `src/songs`); o Teclado guarda
+  suas preferências em `music-lab:keyboard` (som, nº de teclas, faixa, notas caindo).
 
 ### Design (tin whistle Feadóg)
 
@@ -252,6 +261,20 @@ O que está codificado aqui:
 - **A geometria horizontal mora em `placeSystem`** (`music/layout.ts`), não no
   componente: é o que mantém o dedilhado exatamente sob a sua nota. `ScoreBook`
   pagina os dois modos juntos - eles viram a página no mesmo compasso.
+- **Dois modos, uma tela** (`practiceMode.ts`, preferência `mode`): **Treino** é
+  a prática com microfone (dedilhado, ponteiro, sustentação, e a folha virando a
+  página atrás da nota atual); **Leitura** é a peça INTEIRA na tela, sem
+  microfone e sem julgamento, para tocar por conta. A paginação só existe no
+  Treino porque ela segue o cursor - sem cursor, paginar só esconderia música
+  (`expanded` no `Score`). Partitura/tablatura/ambos e a oitava de leitura valem
+  nos dois.
+- **Parar é soltar o microfone.** O `useMic` só interrompe de verdade quando as
+  TRACKS param (fechar o `AudioContext` não apaga o indicador de captura do
+  navegador), e isso precisa acontecer nos DOIS caminhos: o botão Parar e o fim
+  da música. O fim da música dispara de dentro do frame de áudio, então
+  `stop()` levanta uma trava (`capturingRef`) que o loop confere antes de
+  escrever estado e antes de agendar o próximo frame - senão a captura
+  ressuscita depois do stop.
 - **Oitava de leitura** (`octave.ts`, flag `lowerOctave`, ligada por padrão): o
   whistle é agudo, então a música desce em oitavas inteiras para a faixa legível
   da pauta (`READABLE_LOW/HIGH_MIDI`). É DISPLAY - o aviso de tessitura e o

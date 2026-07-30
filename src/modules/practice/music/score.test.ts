@@ -16,6 +16,7 @@ function scoreWith(events: ScoreEvent[], overrides: Partial<ScoreJSON> = {}): Sc
     id: 'teste',
     title: 'Teste',
     collection: 'irish',
+    pitchReference: 'whistle',
     timeSignature: [4, 4],
     pickupBeats: 0,
     key: { tonic: 'D', mode: 'major' },

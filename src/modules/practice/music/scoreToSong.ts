@@ -15,7 +15,12 @@
 import { parseNote } from './notes';
 import { pitchToName, type ScoreJSON } from './score';
 import { whistleRange } from './fingerings';
-import { transposeNoteName, transpositionToWhistle, type Transposition } from './whistleTuning';
+import {
+  NO_TRANSPOSITION,
+  transposeNoteName,
+  transpositionToWhistle,
+  type Transposition,
+} from './whistleTuning';
 import type { SongJSON, SongNoteJSON } from './song';
 
 const SEMITONES_PER_OCTAVE = 12;
@@ -56,22 +61,36 @@ export function countOutOfRange(song: SongJSON, keyId: string): number {
   }).length;
 }
 
-/** Lê a partitura e monta a música do Treino para uma afinação de whistle. */
-export function scoreToSong(score: ScoreJSON, whistleKey: string): SongJSON {
+/**
+ * A transposição que leva a partitura até a whistle escolhida.
+ *
+ * Partitura em altura de CONCERTO não se transpõe: ela vale pelo tom e pela
+ * oitava do papel, e mexer nisso entregaria a melodia noutro tom só porque o
+ * usuário trocou de flauta. Quem transpõe é a escrita relativa ao dedilhado,
+ * onde o dado real é o dedo e a altura é consequência.
+ */
+export function transpositionFor(score: ScoreJSON, whistleKey: string): Transposition {
+  if (score.pitchReference === 'concert') {
+    return NO_TRANSPOSITION;
+  }
   const whistleShift = transpositionToWhistle(whistleKey);
-  const written = score.events.map((event) => (event.pitch ? pitchToName(event.pitch) : null));
-
-  const soundingMidis = written
-    .filter((name): name is string => name !== null)
-    .map((name) => parseNote(name).midi + whistleShift.semitones);
+  const soundingMidis = score.events
+    .filter((event) => event.pitch)
+    .map((event) => parseNote(pitchToName(event.pitch!)).midi + whistleShift.semitones);
   const octaves = bestOctaveShift(soundingMidis, whistleKey) / SEMITONES_PER_OCTAVE;
 
   // A whistle e o encaixe de oitava são uma transposição só - aplicada de uma
   // vez, a grafia sai certa sem passo intermediário.
-  const total: Transposition = {
+  return {
     semitones: whistleShift.semitones + octaves * SEMITONES_PER_OCTAVE,
     diatonicSteps: whistleShift.diatonicSteps + octaves * STEPS_PER_OCTAVE,
   };
+}
+
+/** Lê a partitura e monta a música do Treino para uma afinação de whistle. */
+export function scoreToSong(score: ScoreJSON, whistleKey: string): SongJSON {
+  const written = score.events.map((event) => (event.pitch ? pitchToName(event.pitch) : null));
+  const total = transpositionFor(score, whistleKey);
 
   const notes: SongNoteJSON[] = score.events.map((event, index) => {
     const name = written[index];

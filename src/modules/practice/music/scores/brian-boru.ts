@@ -10,6 +10,7 @@ export const BRIAN_BORU: ScoreJSON = {
   id: 'brian-boru',
   title: 'Brian Boru\'s March',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [6, 8],
   pickupBeats: 1,
   key: { tonic: 'E', mode: 'minor' },

@@ -10,6 +10,7 @@ export const GREENSLEEVES: ScoreJSON = {
   id: 'greensleeves',
   title: 'Greensleeves',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [6, 8],
   pickupBeats: 0.5,
   key: { tonic: 'B', mode: 'minor' },

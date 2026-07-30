@@ -214,6 +214,8 @@ def read_partitura(path, entry):
         "title": entry["title"],
         "composer": data.get("compositor") or None,
         "collection": entry["collection"],
+        # A tab é escrita PELO DEDILHADO: trocar de whistle transpõe a peça.
+        "pitchReference": "whistle",
         "timeSignature": time_signature,
         "pickupBeats": pickup_beats,
         "key": {"tonic": tonic, "mode": mode},
@@ -250,6 +252,7 @@ def read_abc_tune(entry):
         "title": entry["title"],
         "composer": tune.get("composer"),
         "collection": entry["collection"],
+        "pitchReference": tune.get("pitchReference", "whistle"),
         "timeSignature": time_signature,
         "pickupBeats": pickup_beats,
         "key": key,
@@ -299,6 +302,7 @@ def render_score(score):
     if score["composer"]:
         lines.append("  composer: %s," % ts_string(score["composer"]))
     lines.append("  collection: %s," % ts_string(score["collection"]))
+    lines.append("  pitchReference: %s," % ts_string(score["pitchReference"]))
     lines.append("  timeSignature: [%d, %d]," % score["timeSignature"])
     lines.append("  pickupBeats: %s," % ts_number(score["pickupBeats"]))
     lines.append(

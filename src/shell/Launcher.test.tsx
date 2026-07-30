@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "../i18n/i18n";
 import { Launcher } from "./Launcher";
 import { takePendingAbc } from "../app/router";
+import { APPS } from "../app/registry";
 
 function renderLauncher() {
   const navigate = vi.fn();
@@ -32,8 +33,8 @@ describe("Launcher", () => {
 
   it("lists every app as a card when the input is empty", () => {
     renderLauncher();
-    // Six tools (converter, tuner, metronome, practice, guide, songmaker), no suggestions yet.
-    expect(screen.getAllByRole("button")).toHaveLength(6);
+    // One card per catalogued app, no suggestions yet.
+    expect(screen.getAllByRole("button")).toHaveLength(APPS.length);
   });
 
   it("routes a card click to that app", async () => {
@@ -57,9 +58,9 @@ describe("Launcher", () => {
     const user = userEvent.setup();
     const { navigate } = renderLauncher();
     await user.type(screen.getByRole("textbox"), "K:D{Enter}DEF GAB");
-    // The ABC suggestion is prepended above the five cards.
+    // The ABC suggestion is prepended above the app cards.
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(7);
+    expect(buttons).toHaveLength(APPS.length + 1);
     await user.click(buttons[0]);
     expect(navigate).toHaveBeenCalledWith("converter");
   });
@@ -72,7 +73,7 @@ describe("Launcher", () => {
     await user.paste(KESH_ABC);
     // ABC mode: the suggestion leads and the keyword filter is suppressed (all cards stay).
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(7);
+    expect(buttons).toHaveLength(APPS.length + 1);
     await user.click(buttons[0]);
     expect(navigate).toHaveBeenCalledWith("converter");
     // The pasted tune travels through the hand-off channel verbatim, not the URL.
@@ -83,8 +84,8 @@ describe("Launcher", () => {
     const user = userEvent.setup();
     renderLauncher();
     await user.type(screen.getByRole("textbox"), "X:1");
-    // Header present → converter suggestion shows alongside the five cards.
-    expect(screen.getAllByRole("button")).toHaveLength(7);
+    // Header present → converter suggestion shows alongside the app cards.
+    expect(screen.getAllByRole("button")).toHaveLength(APPS.length + 1);
   });
 
   it("treats a prose sentence as a search, not ABC", async () => {
@@ -93,9 +94,9 @@ describe("Launcher", () => {
     await user.type(screen.getByRole("textbox"), "how do I tune my whistle");
     // No header field → no converter hand-off waiting in the channel.
     expect(takePendingAbc()).toBeNull();
-    // And no ABC suggestion is prepended: only filtered cards, never the six-button
-    // ABC signature (all five apps + suggestion).
+    // And no ABC suggestion is prepended: only filtered cards, never the
+    // ABC signature (all app cards + suggestion).
     const buttons = screen.getAllByRole("button");
-    expect(buttons.length).toBeLessThanOrEqual(6);
+    expect(buttons.length).toBeLessThanOrEqual(APPS.length);
   });
 });

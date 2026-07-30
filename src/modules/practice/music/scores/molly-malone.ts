@@ -10,6 +10,7 @@ export const MOLLY_MALONE: ScoreJSON = {
   id: 'molly-malone',
   title: 'Molly Malone',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [3, 4],
   pickupBeats: 2.5,
   key: { tonic: 'D', mode: 'major' },

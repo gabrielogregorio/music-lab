@@ -10,6 +10,7 @@ export const COUNTY_DOWN: ScoreJSON = {
   id: 'county-down',
   title: 'Star of the County Down',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 1,
   key: { tonic: 'G', mode: 'major' },

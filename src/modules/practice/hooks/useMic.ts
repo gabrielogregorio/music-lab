@@ -37,6 +37,13 @@ export function useMic(a4 = A4_HZ) {
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
+  /**
+   * Captura viva. Existe porque `stop()` pode ser chamado de DENTRO de um
+   * listener de frame (a música acabou no meio do loop): sem esta trava, o loop
+   * seguiria e agendaria o frame seguinte depois do `stop`, deixando o
+   * microfone aberto e lendo de um AudioContext já fechado.
+   */
+  const capturingRef = useRef(false);
   const smootherRef = useRef(new PitchSmoother(SMOOTHER_WINDOW));
   const lastTsRef = useRef(0);
   const listenersRef = useRef<Set<FrameListener>>(new Set());
@@ -64,9 +71,11 @@ export function useMic(a4 = A4_HZ) {
       const sampleBuffer = new Float32Array(analyser.fftSize);
       smootherRef.current.reset();
       lastTsRef.current = performance.now();
+      capturingRef.current = true;
       setError(null);
 
       const loop = () => {
+        if (!capturingRef.current) return;
         const now = performance.now();
         const deltaSec = Math.min(MAX_FRAME_DT_SEC, (now - lastTsRef.current) / MS_PER_SECOND);
         lastTsRef.current = now;
@@ -96,6 +105,8 @@ export function useMic(a4 = A4_HZ) {
         }
         readingRef.current = reading;
         for (const listener of listenersRef.current) listener(reading, deltaSec);
+        // Um listener pode ter fechado a captura agora (fim da música).
+        if (!capturingRef.current) return;
         setState(reading);
         rafRef.current = requestAnimationFrame(loop);
       };
@@ -106,7 +117,13 @@ export function useMic(a4 = A4_HZ) {
     }
   }, [a4]);
 
+  /**
+   * Solta o microfone de verdade: para as TRACKS (é o que apaga o indicador de
+   * "gravando" do navegador - fechar só o AudioContext não apaga) e fecha o
+   * contexto. Idempotente e seguro de chamar de dentro do loop.
+   */
   const stop = useCallback(() => {
+    capturingRef.current = false;
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;

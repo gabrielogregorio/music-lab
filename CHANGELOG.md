@@ -1,5 +1,66 @@
 # Changelog
 
+## 2.6.0 - Teclado, e as músicas viraram ponto global
+
+### As músicas saíram de dentro do Treino
+
+A biblioteca de músicas morava dentro do Treino (`useLibrary`, em `useStorage.ts`).
+Agora ela é um **ponto global agnóstico** em `src/songs/`: `useSongLibrary` compõe os
+exercícios, o repertório de whistle (partituras transpostas) e as músicas do usuário
+numa lista de seções, e `localStore.ts` guarda o `loadJson`/`saveJson`. O Treino
+consome dela como antes; qualquer módulo novo também. Música que o usuário salva
+aparece nos dois. O modelo `SongJSON` e o repertório continuam em `practice/music`
+(núcleo gerado) - a library monta a biblioteca por cima.
+
+### Teclado (piano na tela)
+
+Novo módulo em `#/keyboard`: um piano que toca a MESMA biblioteca do Treino.
+
+- **Quantidade de teclas ajustável** (`music/keys.ts`, puro): slider de 7 a 49 teclas
+  + botões de oitava. Ao escolher a música, o teclado se encaixa na tessitura dela.
+- **Som escolhível**: reusa as 6 vozes melódicas do Song Maker (`playMelodyNote`), sem
+  duplicar síntese.
+- **Notas caindo** (estilo Synthesia, `music/falling.ts` + `FallingNotes`): modo
+  autoplay - as peças descem e batem na tecla no tempo da música, com o teclado
+  acendendo. É visualização; o julgamento por microfone segue sendo do Treino. É um
+  toggle, gravado em `music-lab:keyboard` junto com som, nº de teclas e faixa.
+
+O motor de áudio (`audio/engine.ts`) é um scheduler de lookahead que agenda as notas
+no relógio de amostras e reporta a tecla ativa no rAF - testado de verdade com um
+AudioContext falso (não mockado), o que já pegou um "-1" duplicado no fim da música.
+
+## 2.5.0 - Modo Leitura e o microfone que não desligava
+
+### Dois modos: Treino e Leitura
+
+O Treino sempre foi uma coisa só - microfone ligado, a música avançando quando
+você acerta a nota. Faltava o outro uso: **tocar por conta**, lendo a peça de
+ponta a ponta. Agora são duas abas ao lado do botão de tocar.
+
+Na **Leitura** a peça abre INTEIRA. A folha do Treino vira a página seguindo a
+nota atual; sem cursor, paginar só esconderia música - então o modo leitura
+desliga a paginação em vez de herdá-la. Somem o dedilhado, o ponteiro de
+afinação e os ajustes de julgamento (tolerância, sustentação, ignorar oitava,
+articulação), que só fazem sentido com microfone. **Ficam** o andamento e a
+escolha de partitura / tablatura / as duas - é leitura, e ler é o ponto.
+
+O modo é preferência, então fica gravado entre sessões junto com a whistle e a
+oitava de leitura.
+
+### Correção: o microfone continuava aberto
+
+O navegador seguia acusando captura depois de parar. Eram dois furos:
+
+1. **`practice.stop()` não parava o `useMic`.** Parar a prática e parar a
+   captura eram coisas separadas, e só a primeira acontecia - no botão Parar e
+   também no fim da música.
+2. **O loop ressuscitava a captura.** O fim da música dispara de DENTRO do frame
+   de áudio; o `stop()` cancelava o frame agendado, mas o loop em curso seguia
+   até o fim e agendava o próximo, deixando o microfone lendo de um
+   `AudioContext` já fechado. Agora `stop()` levanta uma trava que o loop confere
+   antes de escrever estado e antes de agendar - e ela é conferida por teste nos
+   dois pontos.
+
 ## 2.4.0 - Repertório em partitura (o ABC saiu do Treino)
 
 O repertório do Treino deixou de ser ABC e virou **partitura**: um modelo em que

@@ -10,6 +10,7 @@ export const SALLY_GARDENS: ScoreJSON = {
   id: 'sally-gardens',
   title: 'Down by the Sally Gardens',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 1,
   key: { tonic: 'D', mode: 'major' },

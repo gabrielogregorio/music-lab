@@ -10,6 +10,7 @@ export const BRITCHES: ScoreJSON = {
   id: 'britches',
   title: 'Britches Full of Stitches',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [2, 4],
   pickupBeats: 0.5,
   key: { tonic: 'G', mode: 'major' },

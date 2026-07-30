@@ -10,6 +10,7 @@ export const SCOTLAND_THE_BRAVE: ScoreJSON = {
   id: 'scotland-the-brave',
   title: 'Scotland the Brave',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 0,
   key: { tonic: 'D', mode: 'major' },

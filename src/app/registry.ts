@@ -58,9 +58,17 @@ export const APPS: AppEntry[] = [
   {
     id: "songmaker",
     route: "songmaker",
-    icon: "🎹",
+    icon: "🎛️",
     nameKey: "nav.songmaker",
     descKey: "app.songmaker.desc",
     kwKey: "app.songmaker.kw",
+  },
+  {
+    id: "keyboard",
+    route: "keyboard",
+    icon: "🎹",
+    nameKey: "nav.keyboard",
+    descKey: "app.keyboard.desc",
+    kwKey: "app.keyboard.kw",
   },
 ];

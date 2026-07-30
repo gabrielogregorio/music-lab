@@ -10,6 +10,7 @@ export const THIS_OLD_MAN: ScoreJSON = {
   id: 'this-old-man',
   title: 'This Old Man',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 0,
   key: { tonic: 'D', mode: 'major' },

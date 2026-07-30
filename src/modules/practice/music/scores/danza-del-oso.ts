@@ -10,6 +10,7 @@ export const DANZA_DEL_OSO: ScoreJSON = {
   id: 'danza-del-oso',
   title: 'Danza del Oso',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [2, 4],
   pickupBeats: 1,
   key: { tonic: 'E', mode: 'minor' },

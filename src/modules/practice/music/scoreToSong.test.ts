@@ -7,6 +7,7 @@ const SIMPLE_SCORE: ScoreJSON = {
   id: 'teste',
   title: 'Teste',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 1,
   key: { tonic: 'D', mode: 'major' },
@@ -64,6 +65,23 @@ describe('scoreToSong', () => {
 
   it('marca a música com a afinação escolhida', () => {
     expect(scoreToSong(SIMPLE_SCORE, 'Bb').whistleKey).toBe('Bb');
+  });
+});
+
+describe('partitura em altura de concerto', () => {
+  const CONCERT_SCORE: ScoreJSON = {
+    ...SIMPLE_SCORE,
+    id: 'concerto',
+    pitchReference: 'concert',
+  };
+
+  it('não transpõe ao trocar de whistle - a nota escrita é o dado', () => {
+    expect(noteNames(CONCERT_SCORE, 'D')).toEqual(['D4', 'F#4', 'rest', 'A4', 'D5']);
+    expect(noteNames(CONCERT_SCORE, 'C')).toEqual(noteNames(CONCERT_SCORE, 'D'));
+  });
+
+  it('a escrita relativa ao dedilhado transpõe, e é o que a diferencia', () => {
+    expect(noteNames(SIMPLE_SCORE, 'C')).not.toEqual(noteNames(SIMPLE_SCORE, 'D'));
   });
 });
 

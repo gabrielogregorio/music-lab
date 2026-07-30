@@ -10,6 +10,7 @@ export const RATTLIN_BOG: ScoreJSON = {
   id: 'rattlin-bog',
   title: 'The Rattlin\' Bog',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [2, 4],
   pickupBeats: 1,
   key: { tonic: 'G', mode: 'major' },

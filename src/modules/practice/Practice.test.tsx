@@ -6,12 +6,16 @@ import { I18nProvider } from '../../i18n/i18n';
 import { REPERTOIRE, findScore } from './music/repertoire';
 
 // O motor de áudio é um sistema externo: aqui interessa o fluxo da tela, não o
-// microfone. Sem o mock, o jsdom não tem getUserMedia nem AudioContext.
+// microfone. Sem o mock, o jsdom não tem getUserMedia nem AudioContext. Os spies
+// são estáveis entre renders para dar para asserir QUEM chamou o quê.
+const micSpies = vi.hoisted(() => ({ start: vi.fn(), stop: vi.fn() }));
+
 vi.mock('./hooks/useMic', () => ({
   useMic: () => ({
     active: false,
     error: null,
-    start: vi.fn(),
+    start: micSpies.start,
+    stop: micSpies.stop,
     onFrame: () => () => {},
   }),
 }));
@@ -25,6 +29,8 @@ function renderPractice() {
 }
 
 beforeEach(() => {
+  micSpies.start.mockClear();
+  micSpies.stop.mockClear();
   localStorage.clear();
   // O provider deriva o idioma do navegador; no jsdom isso cairia em inglês.
   localStorage.setItem('music-lab:lang', 'pt');
@@ -109,6 +115,15 @@ describe('Practice', () => {
     expect(lowestY()).toBeLessThan(reading);
   });
 
+  it('libera o microfone ao parar - parar a prática não pode deixar a captura aberta', async () => {
+    const user = userEvent.setup();
+    renderPractice();
+    await user.click(screen.getByRole('button', { name: /Tocar/ }));
+    expect(micSpies.stop).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: /Parar/ }));
+    expect(micSpies.stop).toHaveBeenCalledTimes(1);
+  });
+
   it('mostra a procedência da melodia do repertório, com link para a fonte do ritmo', async () => {
     const user = userEvent.setup();
     const score = findScore('sally-gardens')!;
@@ -119,5 +134,78 @@ describe('Practice', () => {
       'href',
       score.source.referenceUrl,
     );
+  });
+});
+
+describe('Practice - modo Leitura', () => {
+  const openReading = async (user: ReturnType<typeof userEvent.setup>) =>
+    user.click(screen.getByRole('tab', { name: 'Leitura' }));
+
+  it('começa no Treino, com o microfone à disposição', () => {
+    renderPractice();
+    expect(screen.getByRole('tab', { name: 'Treino' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: /Tocar/ })).toBeInTheDocument();
+  });
+
+  it('na Leitura some o que é do microfone: tocar, dedilhado e ponteiro', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPractice();
+    await openReading(user);
+    expect(screen.queryByRole('button', { name: /Tocar/ })).not.toBeInTheDocument();
+    expect(container.querySelector('.whistle-diagram')).not.toBeInTheDocument();
+    expect(container.querySelector('.pitch-meter')).not.toBeInTheDocument();
+  });
+
+  it('na Leitura some o ajuste de afinação, e o andamento fica', async () => {
+    const user = userEvent.setup();
+    renderPractice();
+    await openReading(user);
+    expect(screen.queryByText(/Tolerância/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ignorar oitava/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Andamento/)).toBeInTheDocument();
+  });
+
+  it('na Leitura a peça abre inteira, não paginada de dois sistemas', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPractice();
+    await user.click(screen.getByText('Scarborough Fair'));
+    const paginated = container.querySelectorAll('.staff-system').length;
+    await openReading(user);
+    const whole = container.querySelectorAll('.staff-system').length;
+    expect(whole).toBeGreaterThan(paginated);
+  });
+
+  it('na Leitura ainda dá para escolher partitura, tablatura ou as duas', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPractice();
+    await openReading(user);
+    await user.click(screen.getByRole('button', { name: 'Tablatura' }));
+    expect(container.querySelector('.tab-system')).toBeInTheDocument();
+    expect(container.querySelector('.staff-system')).not.toBeInTheDocument();
+  });
+
+  it('ir para a Leitura no meio da prática solta o microfone', async () => {
+    const user = userEvent.setup();
+    renderPractice();
+    await user.click(screen.getByRole('button', { name: /Tocar/ }));
+    await openReading(user);
+    expect(micSpies.stop).toHaveBeenCalled();
+  });
+
+  it('voltar para o Treino devolve o botão de tocar', async () => {
+    const user = userEvent.setup();
+    renderPractice();
+    await openReading(user);
+    await user.click(screen.getByRole('tab', { name: 'Treino' }));
+    expect(screen.getByRole('button', { name: /Tocar/ })).toBeInTheDocument();
+  });
+
+  it('guarda o modo entre sessões', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderPractice();
+    await openReading(user);
+    unmount();
+    renderPractice();
+    expect(screen.getByRole('tab', { name: 'Leitura' })).toHaveAttribute('aria-selected', 'true');
   });
 });

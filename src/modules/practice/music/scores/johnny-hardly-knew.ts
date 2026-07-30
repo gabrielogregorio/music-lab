@@ -10,6 +10,7 @@ export const JOHNNY_HARDLY_KNEW: ScoreJSON = {
   id: 'johnny-hardly-knew',
   title: 'Johnny I Hardly Knew Ya',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [6, 8],
   pickupBeats: 0,
   key: { tonic: 'E', mode: 'minor' },

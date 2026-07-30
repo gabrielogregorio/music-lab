@@ -10,6 +10,7 @@ export const ILL_TELL_ME_MA: ScoreJSON = {
   id: 'ill-tell-me-ma',
   title: 'I\'ll Tell Me Ma',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [2, 4],
   pickupBeats: 0.5,
   key: { tonic: 'G', mode: 'major' },

@@ -10,6 +10,7 @@ export const RAGGLE_TAGGLE: ScoreJSON = {
   id: 'raggle-taggle',
   title: 'Raggle Taggle Gypsy',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [2, 4],
   pickupBeats: 1,
   key: { tonic: 'E', mode: 'dorian' },

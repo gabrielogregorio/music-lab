@@ -10,6 +10,7 @@ export const SCARBOROUGH: ScoreJSON = {
   id: 'scarborough',
   title: 'Scarborough Fair',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [3, 4],
   pickupBeats: 2,
   key: { tonic: 'E', mode: 'dorian' },

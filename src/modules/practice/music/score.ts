@@ -50,6 +50,26 @@ export interface ScoreEvent {
   section?: string;
 }
 
+/**
+ * Contra o que as alturas desta partitura são medidas.
+ *
+ * - `whistle`: escrita RELATIVA ao dedilhado, com o Ré grave grafado como D4.
+ *   Trocar de whistle transpõe a peça inteira - é o repertório que nasceu de
+ *   tablatura, onde o dado real é o dedo, não a altura.
+ * - `concert`: altura ABSOLUTA do papel. Trocar de whistle não transpõe nada,
+ *   porque aqui o dado real é a nota escrita - são as transcrições fiéis de
+ *   partitura, que valem pelo tom e pela oitava em que foram publicadas.
+ *
+ * Misturar os dois no mesmo campo seria o bug clássico: a mesma melodia soando
+ * em tom diferente conforme a flauta escolhida, sem ninguém ter pedido.
+ */
+export type PitchReference = 'whistle' | 'concert';
+
+/** Seções da biblioteca do Treino, na ordem em que aparecem. */
+export const SCORE_COLLECTIONS = ['irish', 'ballads', 'folk', 'christmas', 'screen'] as const;
+
+export type ScoreCollection = (typeof SCORE_COLLECTIONS)[number];
+
 export type ScoreMode = 'major' | 'minor' | 'dorian' | 'mixolydian';
 
 export interface ScoreKey {
@@ -78,7 +98,8 @@ export interface ScoreJSON {
   title: string;
   composer?: string;
   /** Agrupamento na biblioteca: sufixo da chave i18n `practice.collection.*`. */
-  collection: 'irish' | 'ballads';
+  collection: ScoreCollection;
+  pitchReference: PitchReference;
   /** [numerador, denominador]. */
   timeSignature: [number, number];
   /** Anacruse (levare) em tempos de semínima; 0 quando a peça começa no tempo forte. */

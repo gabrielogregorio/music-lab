@@ -10,6 +10,7 @@ export const SKYE_BOAT_SONG: ScoreJSON = {
   id: 'skye-boat-song',
   title: 'The Skye Boat Song',
   collection: 'ballads',
+  pitchReference: 'whistle',
   timeSignature: [3, 4],
   pickupBeats: 0,
   key: { tonic: 'G', mode: 'major' },

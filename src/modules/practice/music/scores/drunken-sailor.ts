@@ -10,6 +10,7 @@ export const DRUNKEN_SAILOR: ScoreJSON = {
   id: 'drunken-sailor',
   title: 'Drunken Sailor',
   collection: 'irish',
+  pitchReference: 'whistle',
   timeSignature: [4, 4],
   pickupBeats: 2,
   key: { tonic: 'E', mode: 'dorian' },
