@@ -15,11 +15,10 @@ import { Trace } from "../core/trace";
 import { A4_DEFAULT, type NoteNaming } from "../core/cents";
 import {
   DEFAULT_INSTRUMENT,
+  detectionRange,
   instrumentByKind,
-  rangeFor,
   type InstrumentKind,
 } from "../core/presets";
-import { DEFAULT_WHISTLE } from "../../../whistle/whistles";
 
 const STORAGE_KEY = "music-lab:tuner";
 
@@ -32,8 +31,8 @@ type NavigatorWithWakeLock = Navigator & {
 };
 
 export interface TunerSettings {
+  /** Só ajusta a banda verde e a dica - a detecção é cromática para todos. */
   instrument: InstrumentKind;
-  whistleId: string;
   a4: number;
   toleranceCents: number;
   naming: NoteNaming;
@@ -42,7 +41,6 @@ export interface TunerSettings {
 function defaults(): TunerSettings {
   return {
     instrument: DEFAULT_INSTRUMENT,
-    whistleId: DEFAULT_WHISTLE,
     a4: A4_DEFAULT,
     toleranceCents: instrumentByKind(DEFAULT_INSTRUMENT).toleranceCents,
     naming: "letter",
@@ -126,10 +124,9 @@ export function useTuner() {
   const engineRef = useRef<TunerEngine | null>(null);
   const wakeLockRef = useRef<{ release(): Promise<void> } | null>(null);
 
-  const range = useMemo(
-    () => rangeFor(settings.instrument, settings.whistleId),
-    [settings.instrument, settings.whistleId],
-  );
+  // A faixa é cromática e fixa (compartilhada com o Treino) - não depende mais do
+  // instrumento nem da afinação. O afinador ouve o som, não o instrumento.
+  const range = detectionRange();
 
   // O estabilizador é um objeto externo, não React. Configuramos no próprio
   // evento que muda a preferência (aqui) e ao iniciar (em `start`), nunca num

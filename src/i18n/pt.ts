@@ -205,6 +205,7 @@ export const pt: Dict = {
   "tuner.tip.flute": "A flauta sobe de afinação enquanto aquece. Afine depois de aquecer, e lembre que a pressão do sopro move a nota mais que o afinador consegue mostrar.",
   "tuner.tip.ocarina": "A ocarina é quase um tom puro, sem harmônicos para se agarrar: a leitura vem do período do som. Aqui o sopro é o instrumento - use o traço para treinar a curva dele.",
   "tuner.label.instrument": "Instrumento",
+  "tuner.hint.instrument": "A detecção é sempre cromática - ouve qualquer som e mostra a nota mais próxima. O instrumento só ajusta a largura da banda de afinado.",
   "tuner.label.whistleKey": "Afinação do whistle",
   "tuner.label.a4": (p) => `Lá de referência - ${p.hz} Hz`,
   "tuner.hint.a4": "440 é o padrão; orquestras costumam usar 442 ou 443, e o barroco fica em 415.",

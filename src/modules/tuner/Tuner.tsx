@@ -12,7 +12,6 @@ import { useTuner } from "./hooks/useTuner";
 import { TunerDial } from "./components/TunerDial";
 import { INSTRUMENTS, instrumentByKind, type InstrumentKind } from "./core/presets";
 import { A4_MAX, A4_MIN } from "./core/cents";
-import { WHISTLES } from "../../whistle/whistles";
 
 type Direction = "sharp" | "flat" | null;
 
@@ -205,27 +204,8 @@ export function Tuner() {
               </option>
             ))}
           </select>
+          <p className="hint">{translate("tuner.hint.instrument")}</p>
         </div>
-
-        {settings.instrument === "whistle" && (
-          <div className="field">
-            <label className="field-label" htmlFor="tuner-key">
-              {translate("tuner.label.whistleKey")}
-            </label>
-            <select
-              id="tuner-key"
-              value={settings.whistleId}
-              onChange={(event) => setSettings({ whistleId: event.target.value })}
-            >
-              {WHISTLES.map((whistle) => (
-                <option key={whistle.id} value={whistle.id}>
-                  {whistle.label}
-                  {whistle.id === "D" ? translate("whistle.mostCommon") : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         <div className="field">
           <label className="field-label" htmlFor="tuner-a4">

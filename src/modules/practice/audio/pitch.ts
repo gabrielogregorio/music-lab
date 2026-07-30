@@ -1,10 +1,14 @@
 /**
  * Detector de pitch via NSDF (McLeod Pitch Method - MPM).
  * Portado do afinador do CLEO. JS puro, sem FFT - ótimo para instrumentos
- * monofônicos de sopro como tin whistle. Range largo (~55Hz a ~2100Hz).
+ * monofônicos de sopro como tin whistle. Range largo, agnóstico de instrumento.
+ *
+ * A faixa (`MIN_PITCH_HZ`/`MAX_PITCH_HZ`) mora em `src/audio/pitchRange.ts` e é
+ * COMPARTILHADA com o Afinador - os dois ouvem o microfone com a mesma régua.
  *
  * Referência: Philip McLeod & Geoff Wyvill - "A Smarter Way to Find Pitch".
  */
+import { MAX_PITCH_HZ, MIN_PITCH_HZ } from "../../../audio/pitchRange";
 
 export interface PitchResult {
   /** Frequência em Hz. -1 se não detectado. */
@@ -21,8 +25,8 @@ const CLARITY_THRESHOLD = 0.88;
 export function detectPitch(
   buf: Float32Array,
   sampleRate: number,
-  minHz = 55,
-  maxHz = 2100,
+  minHz = MIN_PITCH_HZ,
+  maxHz = MAX_PITCH_HZ,
 ): PitchResult {
   const size = buf.length;
   let rms = 0;

@@ -1,19 +1,20 @@
 /**
- * Presets por instrumento.
+ * Presets do afinador.
  *
- * A faixa de busca não é enfeite: restringi-la é a defesa mais barata que existe
- * contra erro de oitava. Um whistle em Ré não tem o que fazer abaixo de 500 Hz,
- * então nem procuramos lá - e o ✕ na oitava errada, que arrebenta corda em
- * instrumento de corda e confunde em sopro, simplesmente não acontece.
+ * MUDANÇA de filosofia (a pedido do dono): o afinador foca no SOM, não no
+ * instrumento. A DETECÇÃO é sempre cromática e larga - a mesma faixa
+ * compartilhada com o Treino (`src/audio/pitchRange.ts`) - então qualquer nota
+ * que você toque entra e aparece a nota mais próxima e o quanto está desviada.
+ * Antes a faixa era estreitada por instrumento (defesa contra erro de oitava), e
+ * era isso que fazia o afinador "não registrar" o que caía fora.
  *
- * A tolerância vem junto do preset porque "afinado" quer dizer coisas
- * diferentes: um sopro varre dezenas de cents só de pressão de ar, e cobrar dele
- * a mesma banda de uma corda solta é reprovar o músico por respirar.
+ * O que o preset ainda define é só o CONFORTO: a banda verde (tolerância) e uma
+ * dica. "Afinado" quer dizer coisas diferentes - um sopro varre dezenas de cents
+ * só de pressão de ar - mas isso mexe na banda, nunca no que é ouvido.
  */
-import { whistleById } from "../../../whistle/whistles";
-import { midiToHz, SEMITONES_PER_OCTAVE } from "./cents";
+import { PITCH_RANGE, type PitchRange } from "../../../audio/pitchRange";
 
-export type InstrumentKind = "whistle" | "recorder" | "flute" | "ocarina" | "chromatic";
+export type InstrumentKind = "chromatic" | "whistle" | "recorder" | "flute" | "ocarina";
 
 export interface InstrumentDef {
   kind: InstrumentKind;
@@ -25,16 +26,23 @@ export interface InstrumentDef {
    *  instrumento pra agradar o afinador. */
   warmsUp: boolean;
   tipKey?: string;
-  /** Faixa fixa em Hz. O whistle deriva a dele da afinação escolhida. */
-  range?: { minHz: number; maxHz: number };
 }
 
+// Cromático primeiro: é o padrão e o modo "qualquer som". Os demais só trocam a
+// largura da banda verde e trazem uma dica - a detecção é a mesma para todos.
 export const INSTRUMENTS: InstrumentDef[] = [
+  {
+    kind: "chromatic",
+    icon: "🎹",
+    nameKey: "tuner.inst.chromatic",
+    toleranceCents: 10,
+    warmsUp: false,
+  },
   {
     kind: "whistle",
     icon: "🎵",
     nameKey: "tuner.inst.whistle",
-    toleranceCents: 10,
+    toleranceCents: 12,
     warmsUp: true,
     tipKey: "tuner.tip.whistle",
   },
@@ -42,71 +50,41 @@ export const INSTRUMENTS: InstrumentDef[] = [
     kind: "recorder",
     icon: "🪈",
     nameKey: "tuner.inst.recorder",
-    toleranceCents: 10,
+    toleranceCents: 12,
     warmsUp: true,
     tipKey: "tuner.tip.recorder",
-    range: { minHz: 480, maxHz: 2500 },
   },
   {
     kind: "flute",
     icon: "🎶",
     nameKey: "tuner.inst.flute",
-    toleranceCents: 8,
+    toleranceCents: 10,
     warmsUp: true,
     tipKey: "tuner.tip.flute",
-    range: { minHz: 240, maxHz: 2300 },
   },
   {
     kind: "ocarina",
     icon: "🏺",
     nameKey: "tuner.inst.ocarina",
-    toleranceCents: 10,
+    toleranceCents: 12,
     warmsUp: true,
     tipKey: "tuner.tip.ocarina",
-    range: { minHz: 430, maxHz: 1600 },
-  },
-  {
-    kind: "chromatic",
-    icon: "🎹",
-    nameKey: "tuner.inst.chromatic",
-    toleranceCents: 5,
-    warmsUp: false,
-    range: { minHz: 65, maxHz: 2200 },
   },
 ];
 
-export const DEFAULT_INSTRUMENT: InstrumentKind = "whistle";
+export const DEFAULT_INSTRUMENT: InstrumentKind = "chromatic";
 
 export function instrumentByKind(kind: InstrumentKind): InstrumentDef {
   return INSTRUMENTS.find((instrument) => instrument.kind === kind) ?? INSTRUMENTS[0];
 }
 
-/** Teto da tessitura útil do whistle: duas oitavas mais uma folga curta. */
-const RANGE_SPAN_SEMITONES = 25;
-
-export interface SearchRange {
-  minHz: number;
-  maxHz: number;
-}
+export type SearchRange = PitchRange;
 
 /**
- * A tabela de digitação usa a convenção dó-central = 60, em que o whistle em Ré
- * fica no Ré4 escrito; o instrumento soa uma oitava acima. O afinador mede o som
- * real, então some a oitava aqui - este é o único lugar do app onde escrita e
- * som deixam de coincidir.
+ * A faixa de detecção. É a mesma para qualquer instrumento (e a mesma do Treino):
+ * o afinador ouve o som, não o instrumento. Fica como função para o motor
+ * continuar recebendo `{ minHz, maxHz }` como antes.
  */
-export function whistleRange(whistleId: string): SearchRange {
-  const whistle = whistleById(whistleId);
-  const soundingTonic = whistle.tonicMidi + SEMITONES_PER_OCTAVE;
-  // Piso com folga de um semitom: um whistle frio toca bemol de verdade, e a
-  // faixa precisa alcançar a nota errada pra poder dizer que ela está errada.
-  const minHz = midiToHz(soundingTonic - 1);
-  // Teto: duas oitavas de tessitura mais uma folga curta.
-  const maxHz = midiToHz(soundingTonic + RANGE_SPAN_SEMITONES);
-  return { minHz, maxHz };
-}
-
-export function rangeFor(kind: InstrumentKind, whistleId: string): SearchRange {
-  const def = instrumentByKind(kind);
-  return def.range ?? whistleRange(whistleId);
+export function detectionRange(): SearchRange {
+  return PITCH_RANGE;
 }

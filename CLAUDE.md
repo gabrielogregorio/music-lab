@@ -86,7 +86,7 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/app/theme.ts` | `lockLightTheme()` - fixa `data-theme="light"` no `<html>`. O app é **travado no tema claro**; não há toggle. |
 | `src/shell/` | `TopBar` (seletor de idiomas: flag **+ código** de texto, PT/EN/... - a flag emoji some em muito Android/Windows, o código garante que o seletor apareça no mobile), `Nav`, `Launcher` (a home) e `WhistleMark` (a marca SVG). |
 | `src/modules/converter/Converter.tsx` | UI React sobre os cores de `music/`, `whistle/`, `ui/`. Seletor de vista partitura/tablatura/ambas (`ViewMode`, mesmo espírito do Treino): "tab" reusa `renderTabSvg`, "both" injeta os diagramas alinhados. |
-| `src/modules/tuner/` | Afinador. `core/` puro e testado (yin, cents, stability, vibrato, trace, presets); `audio/` (worklet coletor + worker YIN + engine); `hooks/`, `components/`. |
+| `src/modules/tuner/` | Afinador **cromático e agnóstico de instrumento**: a detecção usa a faixa larga compartilhada `src/audio/pitchRange.ts` (a MESMA do Treino) - o preset de instrumento só ajusta a banda verde e a dica, nunca o que é ouvido. `core/` puro e testado (yin, cents, stability, vibrato, trace, presets); `audio/` (worklet coletor + worker YIN + engine); `hooks/`, `components/`. |
 | `src/modules/metronome/` | `Metronome.tsx` (UI + loop rAF) + `core/` (timing/áudio puro, testado). |
 | `src/modules/practice/` | Treino: `audio/` (pitch NSDF), `hooks/`, `Practice.tsx` e `status.ts` (fonte única da paleta de feedback verde/laranja/vermelho/ciano + `historyBarColor`/`holeFill`). |
 | `src/modules/practice/music/` | Núcleo puro: `score.ts` (o formato de PARTITURA) + `scores/*.ts` e `repertoire.ts` (repertório **gerado** por `tools/partituras-import/`) → `scoreToSong.ts` → `song.ts`; `fingerings.ts` (tabela de furos + tessitura real), `whistleTuning.ts` (transposição por afinação), `octave.ts` (oitava de leitura), `layout.ts` (compassos, sistemas e `placeSystem`), `scoreView.ts`, `notes.ts`, `tempo.ts`. |
@@ -94,6 +94,7 @@ classes DOM (`.abcjs-note`, `.abcjs-staff-wrapper`).
 | `src/songs/` | **Ponto global das músicas** (agnóstico). `library.ts` (`useSongLibrary`) compõe exercícios + repertório de whistle + músicas do usuário numa lista de seções; `localStore.ts` (`loadJson`/`saveJson`). Treino E Teclado leem daqui - o `SongJSON`/`prepareSong` e o repertório continuam em `practice/music` (núcleo gerado) e a library importa de lá. |
 | `src/modules/guide/` | Digitações: `Guide.tsx`, `instruments.ts` (tabela por instrumento, testado), `HoleDiagram`/`HoldGuide`, e a REFERÊNCIA de teoria (`theory.ts` puro/testado com o de→para solfejo↔letra↔ABC + escalas; `TheoryReference.tsx` renderiza a tabela e os resumos de escala/cromático/partitura/ABC irlandês). Prosa da referência em pt+en, com fallback en nos demais idiomas. |
 | `src/audio/voices.ts` | **Biblioteca compartilhada de vozes Web Audio** (Song Maker E Teclado tocam daqui): 16 vozes melódicas (`playMelodyNote`) e 4 percussões de 3 linhas (`playPercussionHit`), tudo sintetizado, sem sample. Testado com AudioContext falso. |
+| `src/audio/pitchRange.ts` | **Faixa de detecção de pitch compartilhada** pelo Afinador e pelo Treino (`MIN/MAX_PITCH_HZ`, ~55-2100 Hz). Larga e agnóstica de instrumento de propósito: os dois ouvem o microfone com a mesma régua. |
 | `src/modules/songmaker/` | Song Maker: `music/` (grade/escala puras; `buildPitches` fecha com `EXTRA_TOP_ROWS`) + `export/` (`plan.ts` puro → `midi.ts` bytes de Standard MIDI + `wav.ts` render em OfflineAudioContext + encoder PCM) + `engine.ts` (scheduler de lookahead sobre `src/audio/voices`) + `SongMaker.tsx`. Percussão em 3 linhas (`PERCUSSION_ROWS`). |
 | `src/modules/keyboard/` | Teclado: `music/` puro (`keys.ts` teclas+geometria, `playback.ts` linha do tempo, `falling.ts` posições da chuva de notas) + `audio/engine.ts` (scheduler que reusa `playMelodyNote` de `src/audio/voices`; testado com AudioContext falso) + `components/` (`Piano`, `FallingNotes`) + `Keyboard.tsx`. |
 | `tools/partituras-import/` | Traz as partituras canônicas do projeto "tabs in C tin whistle" (fora do repo) para `music/scores/*.ts` + `repertoire.ts`. Ver o README de lá. Roda fora do build. |
@@ -197,6 +198,13 @@ O que está codificado aqui:
 - **A janela sai da nota mais grave: 3 períodos** (`analysisWindow`). É a régua do
   Praat. Não existe knob que compre responsividade abaixo disso - só lixo. Por
   isso a UI **mostra** a janela, não deixa arrastar.
+- **A detecção é cromática e agnóstica de instrumento** (`src/audio/pitchRange.ts`,
+  a mesma faixa larga do Treino). Decisão do dono, revertendo o "faixa estreita por
+  instrumento = defesa contra erro de oitava": estreitar a busca fazia o afinador
+  **não registrar** o que caísse fora - inclusive o músico tocando desafinado, que
+  é justo o que ele precisa ver. Agora ouve o som, mostra a nota mais próxima e o
+  desvio; o preset de instrumento só mexe na banda verde. O preço (a janela sai do
+  grave da faixa larga, ~55 Hz, então mais latência) é aceito de propósito.
 - **Worklet burro / worker esperto.** O YIN não cabe nos ~2,7 ms do bloco de
   áudio. Sem SharedArrayBuffer: exigiria COOP/COEP e o **GitHub Pages não manda
   header**. Buffers viajam por `postMessage` com transferência e voltam pro pool.

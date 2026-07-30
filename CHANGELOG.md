@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.10.0 - Afinador cromático: ouve o som, não o instrumento
+
+O afinador "não registrava" quando você tocava fora do estreito - inclusive tocando
+desafinado, que é justo o que se quer ver. Causa: a faixa de busca do YIN era estreitada
+por instrumento (whistle em Ré ⇒ piso ~554 Hz), como defesa contra erro de oitava, e o
+que caísse fora virava silêncio. O Treino nunca teve esse problema porque sempre usou uma
+faixa larga e agnóstica (~55-2100 Hz).
+
+Agora o afinador **ouve o som, não o instrumento**:
+
+- **Detecção cromática e agnóstica**: a faixa larga saiu para `src/audio/pitchRange.ts` e
+  é **compartilhada com o Treino** - os dois ouvem o microfone com a mesma régua. Qualquer
+  nota entra e aparece a nota mais próxima e o quanto está desviada.
+- **Sem foco em Dó/Ré**: o seletor de afinação do whistle saiu do afinador (não estreitava
+  mais nada). O padrão agora é **cromático**; o seletor de instrumento só ajusta a largura
+  da banda verde e traz uma dica - nunca o que é ouvido.
+- O preço aceito: a janela de análise sai do grave da faixa larga, então um pouco mais de
+  latência - de propósito, para não perder nota.
+
 ## 2.9.1 - Seletor de idiomas visível no mobile
 
 Dois problemas somados faziam o seletor de idiomas "sumir":

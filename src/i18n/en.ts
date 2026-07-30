@@ -199,6 +199,7 @@ export const en: Dict = {
   "tuner.tip.flute": "A flute rises in pitch as it warms. Tune it warm, and remember that breath pressure moves the note further than the tuner can show.",
   "tuner.tip.ocarina": "An ocarina is close to a pure tone, with no harmonics to grab onto: the reading comes from the period of the sound itself. Here the breath is the instrument - use the trace to train its curve.",
   "tuner.label.instrument": "Instrument",
+  "tuner.hint.instrument": "Detection is always chromatic - it hears any sound and shows the nearest note. The instrument only sets how wide the in-tune band is.",
   "tuner.label.whistleKey": "Whistle key",
   "tuner.label.a4": (p) => `Concert A - ${p.hz} Hz`,
   "tuner.hint.a4": "440 is the standard; orchestras often sit at 442 or 443, and baroque pitch is 415.",
